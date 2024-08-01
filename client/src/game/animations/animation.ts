@@ -8,5 +8,5 @@ export interface Animation {
 }
 
 export const AnimationBase = {
-  ANIM_INTERVAL: 250
+  ANIM_INTERVAL: 125
 }

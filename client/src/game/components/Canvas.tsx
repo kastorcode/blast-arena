@@ -44,7 +44,7 @@ export default function Canvas () {
   }, [])
 
   return (
-    <canvas ref={canvasRef} width={240} height={208} />
+    <canvas ref={canvasRef} width={240} height={208} style={{ height: '85vh' }} />
   )
 
 }

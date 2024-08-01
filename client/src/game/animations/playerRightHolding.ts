@@ -1,10 +1,10 @@
 import { Animation, AnimationBase } from './animation'
 
-export const PLAYER_D : Animation = {
+export const PLAYER_RH : Animation = {
   ...AnimationBase,
-  COLUMN      : 0,
-  FRAME_START : 0,
-  FRAME_END   : 2,
+  COLUMN      : 2,
+  FRAME_START : 3,
+  FRAME_END   : 5,
   FRAME_WIDTH : 15,
   FRAME_HEIGHT: 23
 }
