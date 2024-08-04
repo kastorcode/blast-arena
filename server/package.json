@@ -3,19 +3,25 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "start": "node dist/index.js"
+    "build": "npx tsc",
+    "dev": "dev=1 nodemon",
+    "start": "node build/index.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "description": "",
   "dependencies": {
-    "@types/node": "^22.0.0",
-    "ts-node": "^10.9.2",
-    "typescript": "^5.5.4",
-    "ws": "^8.18.0"
+    "cors": "^2.8.5",
+    "express": "^4.19.2",
+    "socket.io": "^4.7.5"
   },
   "devDependencies": {
-    "@types/ws": "^8.5.12"
+    "@types/express": "^4.17.21",
+    "@types/node": "^22.0.0",
+    "nodemon": "^3.1.4",
+    "ts-node": "^10.9.2",
+    "tsconfig-paths": "^4.2.0",
+    "typescript": "^5.5.4"
   }
 }

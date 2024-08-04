@@ -31,7 +31,6 @@ class Player {
     sum          : boolean
   }
   private holding  : boolean
-  private id       : string
   private index    : number
   private moving   : boolean
   private side     : 'D'|'L'|'R'|'U'
@@ -45,7 +44,6 @@ class Player {
       frameCurrent: 0, lastRender: 0, sum: true
     }
     this.holding    = false
-    this.id         = id
     this.index      = index
     this.moving     = false
     this.side       = 'D'

@@ -1,0 +1,132 @@
+import { Server } from 'socket.io'
+import { ID_LENGTH, MAX_PLAYERS } from './constants'
+import { LobbyFactory } from './factory'
+import { Socket } from './global'
+import { disconnected, lobbies, pairing } from './players'
+import { generateId } from './util'
+
+export function createLobby (socket : Socket) {
+  const id = generateId()
+  if (lobbies.has(id) || lobbies.has(socket.data.lobby)) {
+    return socket._error('create_lobby_failed')
+  }
+  socket.data.lobby = id
+  lobbies.set(id, LobbyFactory(socket))
+}
+
+export function changeLobby (socket : Socket, lobbyId : string) {
+  if (typeof lobbyId !== 'string' || lobbyId.length !== ID_LENGTH) {
+    return socket._error('lobby_invalid')
+  }
+  const lobby = lobbies.get(lobbyId)
+  if (!lobby) {
+    return socket._error('lobby_not_found')
+  }
+  if (lobby.players.length === MAX_PLAYERS) {
+    return socket._error('lobby_full')
+  }
+  if (lobby.players.find(p => p.id === socket.id)) {
+    return socket._error('already_in_lobby')
+  }
+  exitLobby(socket)
+  socket.data.lobby = lobbyId
+  lobby.players.push(socket)
+  lobbies.set(lobbyId, lobby)
+  lobby.players.forEach(p => p.emit('update_lobby'))
+}
+
+export function joinRoom (io : Server, socket : Socket) {
+  const lobby = lobbies.get(socket.data.lobby)
+  if (!lobby) {
+    return socket._error('lobby_not_found')
+  }
+  if (lobby.isPairing) {
+    return socket._error('lobby_is_pairing')
+  }
+  lobby.isPairing = true
+  if (lobby.players.length === MAX_PLAYERS) {
+    return startGame(io, lobby.players)
+  }
+  let room : number = -1
+  for (let i = 0; i < pairing.length; i++) {
+    if (pairing[i].length + lobby.players.length <= MAX_PLAYERS) {
+      lobby.players.forEach(p => {
+        p.data.pairing = i
+        pairing[i].push(p)
+      })
+      room = i
+      break
+    }
+  }
+  if (room === -1) {
+    let i = pairing.push(lobby.players)
+    i--
+    for (let j = 0; j < pairing[i].length; j++) {
+      pairing[i][j].data.pairing = i
+    }
+  }
+  else if (pairing[room].length === MAX_PLAYERS) {
+    const players = pairing.splice(room, 1)[0]
+    return startGame(io, players)
+  }
+}
+
+function startGame (io : Server, players : Socket[]) {
+  const id = generateId()
+  players.forEach(p => {
+    p.rooms.clear()
+    p.join(id)
+    p.data.room = id
+  })
+  io.to(id).emit('start_game')
+}
+
+export function onDisconnect (socket : Socket) {
+  const timeoutId = setTimeout(() => {
+    console.log('onDisconnect:', timeoutId, socket.id)
+    disconnected.delete(socket.id)
+    exitLobby(socket)
+    exitRoom(socket)
+  }, 10000)
+  disconnected.set(socket.id, timeoutId)
+}
+
+export function onReconnect (socket : Socket) {
+  const timeoutId = disconnected.get(socket.id)
+  console.log('onReconnect:', timeoutId, socket.id)
+  if (!timeoutId) return
+  clearTimeout(timeoutId)
+  disconnected.delete(socket.id)
+}
+
+function exitLobby (socket : Socket) {
+  const lobby = lobbies.get(socket.data.lobby)
+  if (!lobby) return
+  lobby.players = lobby.players.filter(p => p.id !== socket.id)
+  if (lobby.players.length > 0) {
+    lobbies.set(socket.data.lobby, lobby)
+    lobby.players.forEach(p => p.emit('update_lobby'))
+  }
+  else {
+    lobbies.delete(socket.data.lobby)
+  }
+}
+
+function exitRoom (socket : Socket) {
+  if (typeof socket.data.pairing === 'number' && pairing[socket.data.pairing]) {
+    pairing[socket.data.pairing] = pairing[socket.data.pairing].filter(p => p.id !== socket.id)
+    if (pairing[socket.data.pairing].length === 0) {
+      pairing.splice(socket.data.pairing, 1)
+    }
+  }
+  socket.rooms.clear()
+  const lobby = lobbies.get(socket.data.lobby)
+  if (lobby) {
+    lobby.players.forEach(p => {
+      p.data.room = undefined
+      p.data.pairing = undefined
+    })
+    lobby.isPairing = false
+    lobbies.set(socket.data.lobby, lobby)
+  }
+}

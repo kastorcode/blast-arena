@@ -1,0 +1,11 @@
+import { Socket } from './global'
+
+export interface Lobby {
+  isPairing : boolean
+  players   : Socket[]
+}
+
+export const disconnected : Map<string,NodeJS.Timeout>      = new Map()
+export const lobbies      : Map<string,Lobby>               = new Map()
+export const pairing      : Socket[][]                      = []
+lobbies.set('LLLLLLLLLLLL', { isPairing: false, players: [] })

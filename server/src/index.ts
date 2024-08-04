@@ -1,19 +1,20 @@
-import { Server } from 'ws'
-import { PORT } from './constants'
-import { GameFactory } from './game'
+import '~/global'
+import cors from 'cors'
+import express from 'express'
+import http from 'http'
+import { Server } from 'socket.io'
+import { CORS, PORT } from '~/constants'
+import ioListener from '~/ioListener'
+import router from '~/router'
 
-const server = new Server({ port: PORT })
-const game = GameFactory()
+const app = express()
+const server = http.createServer(app)
+const io = new Server(server, { cors: CORS })
 
-server.on('connection', ws => {
-  const id = Math.random().toString(36).substring(2, 15)
-  game.addPlayer({ id })
-  ws.on('close', () => {
-    game.removePlayer({ id })
-  })
-  ws.on('message', message => {
-    console.log(message)
-  })
+app.use(cors(CORS))
+app.use('/', router)
+ioListener(io)
+
+server.listen(PORT, () => {
+  console.log(`Server listening on port ${PORT}`)
 })
-
-console.log(`Server listening on port ${PORT}`)

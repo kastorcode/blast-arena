@@ -1,0 +1,9 @@
+import { Socket } from './global'
+import { Lobby } from './players'
+
+export function LobbyFactory (socket : Socket) : Lobby {
+  return {
+    isPairing: false,
+    players: [socket]
+  }
+}

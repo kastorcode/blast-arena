@@ -1,0 +1,21 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Nodemon Debug",
+      "runtimeExecutable": "nodemon",
+      "program": "${workspaceFolder}/server/src/index.ts",
+      "restart": true,
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen",
+      "skipFiles": ["<node_internals>/**"],
+      "runtimeArgs": ["--exec", "ts-node"],
+      "env": {
+        "TS_NODE_PROJECT": "${workspaceFolder}/server/tsconfig.json",
+        "PATH": "${workspaceFolder}/server/node_modules/.bin:${env:PATH}"
+      }
+    }
+  ]
+}
