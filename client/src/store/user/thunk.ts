@@ -1,6 +1,6 @@
 import { Dispatch } from 'redux'
 import { UserDTO } from '#/dto'
-import socket from '~/game/services/socket'
+import socket from '~/services/socket'
 import store from '~/store'
 import { setUser } from './actions'
 import { dto } from './reducer'

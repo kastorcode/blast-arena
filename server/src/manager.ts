@@ -2,16 +2,17 @@ import { Server } from 'socket.io'
 import { UserDTO } from '#/dto'
 import { ID_LENGTH, MAX_PLAYERS, NICK } from '~/constants'
 import { Socket } from '~/extends'
-import { updateLobbyFactory } from '~/factory'
+import { startGameFactory, updateLobbyFactory } from '~/factory'
 import { rooms } from '~/rooms'
+import { states } from '~/states'
 import { generateId } from '~/util'
 
-export function setUser (user : UserDTO, io : Server, socket : Socket) {
+export function setUser (io : Server, socket : Socket, user : UserDTO) {
   if (typeof user.nick !== 'string' || user.nick.length < NICK.MIN || user.nick.length > NICK.MAX) {
     return socket.emit('error', 'set_user_failed')
   }
   socket.data.nick = user.nick
-  const dto = updateLobbyFactory(io, socket)
+  const dto = updateLobbyFactory(io, socket.data.lobbyId)
   if (dto) {
     io.to(socket.data.lobbyId).emit('update_lobby', dto)
   }
@@ -22,10 +23,10 @@ export function createLobby (io : Server, socket : Socket) {
   if (io.sockets.adapter.rooms.has(lobbyId)) {
     return socket.emit('error', 'create_lobby_failed')
   }
-  return enterLobby(lobbyId, io, socket)
+  return enterLobby(socket, lobbyId)
 }
 
-export async function changeLobby (lobbyId : string, io : Server, socket : Socket) {
+export async function changeLobby (io : Server, socket : Socket, lobbyId : string) {
   if (typeof lobbyId !== 'string' || lobbyId.length !== ID_LENGTH) {
     return socket.emit('error', 'lobby_not_found')
   }
@@ -39,8 +40,8 @@ export async function changeLobby (lobbyId : string, io : Server, socket : Socke
   if (lobby.has(socket.id)) {
     return socket.emit('error', 'already_in_lobby')
   }
-  await enterLobby(lobbyId, io, socket)
-  const dto = updateLobbyFactory(io, socket)
+  await enterLobby(socket, lobbyId)
+  const dto = updateLobbyFactory(io, lobbyId)
   if (dto) {
     io.to(lobbyId).emit('update_lobby', dto)
   }
@@ -64,7 +65,12 @@ export async function joinRoom (io : Server, socket : Socket) {
   }
 }
 
-async function enterLobby (lobbyId : string, io : Server, socket : Socket) {
+export function onDisconnect (io : Server, socket : Socket) {
+  updateRoomQueue(socket)
+  deleteGameState(io, socket)
+}
+
+async function enterLobby (socket : Socket, lobbyId : string) {
   await socket.leave(socket.data.lobbyId)
   await socket.join(lobbyId)
   socket.data.lobbyId = lobbyId
@@ -87,7 +93,7 @@ async function lobbyToRoom (io : Server, socket : Socket, players : Socket[]) {
     return socket.emit('error', 'create_room_failed')
   }
   await enterRoom(roomId, players)
-  return io.to(roomId).emit('start_game')
+  return io.to(roomId).emit('start_game', startGameFactory(io, roomId))
 }
 
 async function enterRoom (roomId : string, players : Socket[]) {
@@ -105,7 +111,7 @@ async function findRoom (io : Server, players : Socket[]) {
       size += players.length
       await enterRoom(roomId, players)
       if (size === MAX_PLAYERS) {
-        io.to(roomId).emit('start_game')
+        io.to(roomId).emit('start_game', startGameFactory(io, roomId))
       }
       else {
         rooms.set(roomId, size)
@@ -123,4 +129,18 @@ async function joinRoomQueue (io : Server, socket : Socket, players : Socket[]) 
   }
   await enterRoom(roomId, players)
   return rooms.set(roomId, players.length)
+}
+
+function updateRoomQueue (socket : Socket) {
+  let playersOn = rooms.get(socket.data.roomId)
+  if (typeof playersOn !== 'number') return
+  playersOn--
+  if (playersOn) rooms.set(socket.data.roomId, playersOn)
+  else           rooms.delete(socket.data.roomId)
+}
+
+function deleteGameState (io : Server, socket : Socket) {
+  if (!states[socket.data.roomId]) return
+  const room = io.sockets.adapter.rooms.get(socket.data.roomId)
+  if (!room || !room.size) delete states[socket.data.roomId]
 }
