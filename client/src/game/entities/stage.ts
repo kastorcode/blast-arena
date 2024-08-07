@@ -2,7 +2,7 @@ interface StageProps {
   bg : number
 }
 
-interface Stage {
+export interface Stage {
   bg       : HTMLImageElement
   cols     : number
   rows     : number

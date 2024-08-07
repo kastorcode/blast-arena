@@ -9,6 +9,7 @@ import { PLAYER_RH } from '~/game/animations/playerRightHolding'
 import { PLAYER_U } from '~/game/animations/playerUp'
 import { PLAYER_UH } from '~/game/animations/playerUpHolding'
 import socket from '~/services/socket'
+import { Block } from './block'
 
 interface PlayerProps extends PlayerDTO {
   index : number
@@ -17,7 +18,7 @@ interface PlayerProps extends PlayerDTO {
   y     : number
 }
 
-interface Player {
+export interface Player {
   anim : {
     frameCurrent : number
     lastRender   : number
@@ -31,18 +32,17 @@ interface Player {
   side     : SIDES
   sprite   : HTMLImageElement
   speed    : number
-  tileSize : number
   x        : number
   y        : number
   setMyself              : () => void
   addKeyboardListener    : () => void
   removeKeyboardListener : () => void
   startMove              : (side : SIDES) => void
-  moveTick               : () => void
+  moveTick               : (blocks : Block[]) => void
   moves                  : { [key in SIDES] : () => void }
   onMove                 : (dto : MoveDTO) => void
   stopMove               : (side : SIDES) => void
-  tick                   : () => void
+  tick                   : (blocks : Block[]) => void
   animate                : (DATA : Animation) => { sx : number, sy : number }
   render                 : (context : CanvasRenderingContext2D) => void
 }
@@ -75,7 +75,6 @@ export function PlayerFactory (props : PlayerProps) : Player {
     nick: props.nick,
     side: 'D',
     speed: props.speed,
-    tileSize: 16,
     x: props.x,
     y: props.y,
     sprite: new Image()
@@ -127,28 +126,47 @@ function startMove (this : Player, side : SIDES) {
   this.moving = 1
 }
 
-function moveTick (this : Player) {
+function moveTick (this : Player, blocks : Block[]) {
   if (!this.moving) return
   this.moves[this.side]()
   if (!this.myself) return
+  for (const i in blocks) {
+    if (blocks[i].isColliding(this)) break
+  }
   const dto:MoveDTO = { h:this.holding, i:this.index, m:this.moving, s:this.side, x:this.x, y:this.y }
   socket.emit('mv', dto)
 }
 
 function moveDown (this : Player) {
   this.y += this.speed
+  if (this.y > 169) {
+    this.y = 169
+    this.moving = 0
+  }
 }
 
 function moveUp (this : Player) {
   this.y -= this.speed
+  if (this.y < 9) {
+    this.y = 9
+    this.moving = 0
+  }
 }
 
 function moveRight (this : Player) {
   this.x += this.speed
+  if (this.x > 209) {
+    this.x = 209
+    this.moving = 0
+  }
 }
 
 function moveLeft (this : Player) {
   this.x -= this.speed
+  if (this.x < 17) {
+    this.x = 17
+    this.moving = 0
+  }
 }
 
 function onMove (this : Player, dto : MoveDTO) {
@@ -173,8 +191,8 @@ function stopMove (this : Player, side : SIDES) {
   socket.emit('mv', dto)
 }
 
-function tick (this : Player) {
-  this.moveTick()
+function tick (this : Player, blocks : Block[]) {
+  this.moveTick(blocks)
 }
 
 function animate (this : Player, DATA : Animation) {

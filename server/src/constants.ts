@@ -1,5 +1,5 @@
 export const CORS = {
-  origin: 'http://localhost:3000',
+  origin: 'http://192.168.2.81:3000',
   methods: ['GET']
 }
 

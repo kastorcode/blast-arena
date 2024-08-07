@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
 import { GameStateDTO, MoveDTO, StartGameDTO } from '#/dto'
-import { PlayerFactory } from '~/game/entities/player'
-import { StageFactory } from '~/game/entities/stage'
+import TILE_IMG from '~/game/components/tileImg'
+import { Block, BlocksFactory } from '~/game/entities/block'
+import { Player, PlayerFactory } from '~/game/entities/player'
+import { Stage, StageFactory } from '~/game/entities/stage'
 import socket from '~/services/socket'
 
 export default function Canvas () {
@@ -9,8 +11,9 @@ export default function Canvas () {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [context, setContext] = useState<CanvasRenderingContext2D>()
   const [myself, setMyself] = useState<number>()
-  const [stage, setStage] = useState<ReturnType<typeof StageFactory>>()
-  const [players, setPlayers] = useState<ReturnType<typeof PlayerFactory>[]>([])
+  const [stage, setStage] = useState<Stage>()
+  const [blocks, setBlocks] = useState<Block[]>()
+  const [players, setPlayers] = useState<Player[]>([])
   const [state, setState] = useState<GameStateDTO>()
 
   function gameLoop () {
@@ -20,7 +23,7 @@ export default function Canvas () {
   }
 
   function tick () {
-    players.forEach(p => p.tick())
+    players.forEach(p => p.tick(blocks as Block[]))
   }
 
   function render () {
@@ -30,11 +33,16 @@ export default function Canvas () {
     stage.render(context)
     // @ts-ignore
     players.forEach(p => p.render(context))
+    for (const i in blocks) {
+      // @ts-ignore
+      context?.drawImage(TILE_IMG, blocks[i].x, blocks[i].y, 16, 16)
+    }
   }
 
   function startGame (dto : StartGameDTO) {
     socket.off('start_game', startGame)
     setStage(StageFactory({bg:dto.stage}))
+    setBlocks(BlocksFactory())
     setPlayers(dto.players.map((p,index) => PlayerFactory({
       ...p,
       index,
@@ -51,7 +59,7 @@ export default function Canvas () {
   }
 
   useEffect(() => {
-    if (typeof myself !== 'number' || !players[myself]) return
+    if (!blocks || typeof myself !== 'number' || !players[myself]) return
     socket.off('myself', setMyself)
     players[myself].setMyself()
     players[myself].addKeyboardListener()
@@ -59,7 +67,7 @@ export default function Canvas () {
       if (!players[myself]) return
       players[myself].removeKeyboardListener()
     }
-  }, [myself, players])
+  }, [blocks, myself, players])
 
   useEffect(() => {
     if (!context || typeof myself !== 'number' || !stage || !players.length || !state) return
