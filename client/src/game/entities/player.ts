@@ -1,3 +1,4 @@
+import { TILE_SIZE } from '#/constants'
 import { MoveDTO, PlayerDTO, SIDES } from '#/dto'
 import { Animation } from '~/game/animations/animation'
 import { PLAYER_D } from '~/game/animations/playerDown'
@@ -35,6 +36,7 @@ export interface Player {
   x        : number
   y        : number
   setMyself              : () => void
+  getAxes                : () => [number, number]
   addKeyboardListener    : () => void
   removeKeyboardListener : () => void
   startMove              : (side : SIDES) => void
@@ -81,6 +83,7 @@ export function PlayerFactory (props : PlayerProps) : Player {
   }
   player.sprite.src = `/sprites/chars/${props.sprite}.png`
   player.setMyself = setMyself.bind(player)
+  player.getAxes = getAxes.bind(player)
   player.addKeyboardListener = addKeyboardListener.bind(player)
   player.removeKeyboardListener = removeKeyboardListener.bind(player)
   player.startMove = startMove.bind(player)
@@ -96,6 +99,12 @@ export function PlayerFactory (props : PlayerProps) : Player {
 
 function setMyself (this : Player) {
   this.myself = true
+}
+
+function getAxes (this : Player) : [number, number] {
+  const x = Math.floor(this.y / TILE_SIZE)
+  const y = Math.floor(((this.x - 1) / TILE_SIZE) - 0.5)
+  return [x, y]
 }
 
 function addKeyboardListener (this : Player) {
@@ -131,7 +140,7 @@ function moveTick (this : Player, blocks : Block[]) {
   this.moves[this.side]()
   if (!this.myself) return
   for (const i in blocks) {
-    if (blocks[i].isColliding(this)) break
+    if (blocks[i].tick(this)) break
   }
   const dto:MoveDTO = { h:this.holding, i:this.index, m:this.moving, s:this.side, x:this.x, y:this.y }
   socket.emit('mv', dto)

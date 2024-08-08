@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { GameStateDTO, MoveDTO, StartGameDTO } from '#/dto'
-import TILE_IMG from '~/game/components/tileImg'
 import { Block, BlocksFactory } from '~/game/entities/block'
 import { Player, PlayerFactory } from '~/game/entities/player'
+import { Square, SquaresFactory } from '~/game/entities/squares'
 import { Stage, StageFactory } from '~/game/entities/stage'
 import socket from '~/services/socket'
 
@@ -13,6 +13,7 @@ export default function Canvas () {
   const [myself, setMyself] = useState<number>()
   const [stage, setStage] = useState<Stage>()
   const [blocks, setBlocks] = useState<Block[]>()
+  const [squares, setSquares] = useState<(Square|null)[][]>()
   const [players, setPlayers] = useState<Player[]>([])
   const [state, setState] = useState<GameStateDTO>()
 
@@ -24,6 +25,20 @@ export default function Canvas () {
 
   function tick () {
     players.forEach(p => p.tick(blocks as Block[]))
+    const [x, y] = players[myself as number].getAxes()
+    // @ts-ignore
+    for (const i in squares[x]) {
+      // @ts-ignore
+      if (!squares[x][i]) continue
+      // @ts-ignore
+      if (squares[x][i].tick(players[myself as number])) break
+    }
+    for (const i in squares) {
+      // @ts-ignore
+      if (!squares[i][y]) continue
+      // @ts-ignore
+      if (squares[i][y].tick(players[myself as number])) break
+    }
   }
 
   function render () {
@@ -32,17 +47,16 @@ export default function Canvas () {
     // @ts-ignore
     stage.render(context)
     // @ts-ignore
+    squares.forEach(row => row.forEach(s => s && s.render(context, stage)))
+    // @ts-ignore
     players.forEach(p => p.render(context))
-    for (const i in blocks) {
-      // @ts-ignore
-      context?.drawImage(TILE_IMG, blocks[i].x, blocks[i].y, 16, 16)
-    }
   }
 
   function startGame (dto : StartGameDTO) {
     socket.off('start_game', startGame)
     setStage(StageFactory({bg:dto.stage}))
     setBlocks(BlocksFactory())
+    setSquares(SquaresFactory(dto.squares))
     setPlayers(dto.players.map((p,index) => PlayerFactory({
       ...p,
       index,

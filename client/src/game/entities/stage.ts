@@ -6,7 +6,6 @@ export interface Stage {
   bg       : HTMLImageElement
   cols     : number
   rows     : number
-  tileSize : number
   render   : (context : CanvasRenderingContext2D) => void
 }
 
@@ -15,7 +14,6 @@ export function StageFactory (props : StageProps) : Stage {
   const stage : Stage = {
     cols: 13,
     rows: 15,
-    tileSize: 16,
     bg: new Image()
   }
   stage.bg.src = `/sprites/stages/${props.bg}.png`

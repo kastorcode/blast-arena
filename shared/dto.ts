@@ -23,8 +23,15 @@ export interface PlayerDTO extends UserDTO {
   sprite : number
 }
 
+export interface SquareDTO {
+  b : number // bonus item id
+  x : number // square x position
+  y : number // square y position
+}
+
 export interface StartGameDTO {
   players : PlayerDTO[]
+  squares : (SquareDTO|null)[][]
   stage   : number
   state   : GameStateDTO
 }

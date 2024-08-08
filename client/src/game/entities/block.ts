@@ -1,10 +1,11 @@
 import { TILE_SIZE } from '#/constants'
+import { isColliding } from '~/game/util/collision'
 import { Player } from './player'
 
 export interface Block {
   x : number
   y : number
-  isColliding : (p : Player) => boolean
+  tick : (p : Player) => boolean
 }
 
 export function BlocksFactory () : Block[] {
@@ -13,17 +14,16 @@ export function BlocksFactory () : Block[] {
     for (let y = 32; y < 161; y += 32) {
       // @ts-expect-error
       const block : Block = { x, y }
-      block.isColliding = isColliding.bind(block)
+      block.tick = tick.bind(block)
       blocks.push(block)
     }
   }
   return blocks
 }
 
-function isColliding (this : Block, p : Player) : boolean {
+function tick (this : Block, p : Player) : boolean {
   const TOLERANCE = 6
-  const colliding = p.x + 15 > this.x && p.x < this.x + TILE_SIZE &&
-                    p.y + 23 > this.y && p.y + 7 < this.y + TILE_SIZE
+  const colliding = isColliding(p, this)
   if (colliding) {
     if (p.x + 15 > this.x && p.side === 'R') {
       p.x = this.x - 15
