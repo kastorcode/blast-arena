@@ -1,8 +1,18 @@
-export type SIDES = 'U'|'L'|'D'|'R'
+export type SIDES = 'U'|'L'|'D'|'R' // player side: up, left, down, right
+
+export interface BlockDTO {
+  b ?: number  // bonus item id
+  t  : 'D'|'I' // block type: desctructible or indestructible
+  x  : number  // block x position
+  y  : number  // block y position
+}
 
 export interface GameStateDTO {
+  blocks    : (BlockDTO|null)[][]
+  bomb      : number
   positions : number[][]
   speed     : number
+  stage     : number
 }
 
 export interface LobbyDTO {
@@ -23,16 +33,8 @@ export interface PlayerDTO extends UserDTO {
   sprite : number
 }
 
-export interface SquareDTO {
-  b : number // bonus item id
-  x : number // square x position
-  y : number // square y position
-}
-
 export interface StartGameDTO {
   players : PlayerDTO[]
-  squares : (SquareDTO|null)[][]
-  stage   : number
   state   : GameStateDTO
 }
 

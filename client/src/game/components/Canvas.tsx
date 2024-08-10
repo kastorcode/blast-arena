@@ -1,44 +1,43 @@
 import { useEffect, useRef, useState } from 'react'
-import { GameStateDTO, MoveDTO, StartGameDTO } from '#/dto'
-import { Block, BlocksFactory } from '~/game/entities/block'
+import { MoveDTO, StartGameDTO } from '#/dto'
+import { BlocksFactory } from '~/game/entities/block'
+import { EntitiesFactory } from '~/game/entities/factory'
 import { Player, PlayerFactory } from '~/game/entities/player'
-import { Square, SquaresFactory } from '~/game/entities/squares'
 import { Stage, StageFactory } from '~/game/entities/stage'
+import { GameState } from '~/game/entities/state'
 import socket from '~/services/socket'
 
 export default function Canvas () {
 
+  const fpsRef = useRef({ fps:0, lastTime:0 })
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [context, setContext] = useState<CanvasRenderingContext2D>()
   const [myself, setMyself] = useState<number>()
   const [stage, setStage] = useState<Stage>()
-  const [blocks, setBlocks] = useState<Block[]>()
-  const [squares, setSquares] = useState<(Square|null)[][]>()
   const [players, setPlayers] = useState<Player[]>([])
-  const [state, setState] = useState<GameStateDTO>()
+  const [state, setState] = useState<GameState>()
 
-  function gameLoop () {
+  function gameLoop (timestamp : number) {
+    const deltaTime = timestamp - fpsRef.current.lastTime
+    fpsRef.current.lastTime = timestamp
+    let fps = 1000 / deltaTime
+    if (fps > 58 && fps < 62) fps = 60
+    if (fps !== fpsRef.current.fps) {
+      fpsRef.current.fps = fps
+      console.log(`${fps} FPS`)
+    }
     tick()
     render()
     requestAnimationFrame(gameLoop)
   }
 
   function tick () {
-    players.forEach(p => p.tick(blocks as Block[]))
-    const [x, y] = players[myself as number].getAxes()
+    for (const [_,entity] of (state as GameState).entities.entities) {
+      entity.tick(state as GameState)
+    }
+    players.forEach(p => p.tick())
     // @ts-ignore
-    for (const i in squares[x]) {
-      // @ts-ignore
-      if (!squares[x][i]) continue
-      // @ts-ignore
-      if (squares[x][i].tick(players[myself as number])) break
-    }
-    for (const i in squares) {
-      // @ts-ignore
-      if (!squares[i][y]) continue
-      // @ts-ignore
-      if (squares[i][y].tick(players[myself as number])) break
-    }
+    state.blocks.tick(players[myself])
   }
 
   function render () {
@@ -47,16 +46,17 @@ export default function Canvas () {
     // @ts-ignore
     stage.render(context)
     // @ts-ignore
-    squares.forEach(row => row.forEach(s => s && s.render(context, stage)))
+    state.blocks.render(context, stage)
+    for (const [_,entity] of (state as GameState).entities.entities) {
+      entity.render(context as CanvasRenderingContext2D)
+    }
     // @ts-ignore
     players.forEach(p => p.render(context))
   }
 
   function startGame (dto : StartGameDTO) {
     socket.off('start_game', startGame)
-    setStage(StageFactory({bg:dto.stage}))
-    setBlocks(BlocksFactory())
-    setSquares(SquaresFactory(dto.squares))
+    setStage(StageFactory({bg:dto.state.stage}))
     setPlayers(dto.players.map((p,index) => PlayerFactory({
       ...p,
       index,
@@ -64,7 +64,11 @@ export default function Canvas () {
       x: dto.state.positions[index][0],
       y: dto.state.positions[index][1]
     })))
-    setState(dto.state)
+    setState({
+      ...dto.state,
+      blocks: BlocksFactory(dto.state.blocks),
+      entities: EntitiesFactory()
+    })
   }
 
   function onMove (dto : MoveDTO) {
@@ -73,19 +77,18 @@ export default function Canvas () {
   }
 
   useEffect(() => {
-    if (!blocks || typeof myself !== 'number' || !players[myself]) return
+    if (typeof myself !== 'number' || !players[myself] || !state) return
     socket.off('myself', setMyself)
     players[myself].setMyself()
-    players[myself].addKeyboardListener()
+    players[myself].addKeyboardListener(state)
     return () => {
-      if (!players[myself]) return
-      players[myself].removeKeyboardListener()
+      players[myself].removeKeyboardListener(state)
     }
-  }, [blocks, myself, players])
+  }, [myself, players, state])
 
   useEffect(() => {
     if (!context || typeof myself !== 'number' || !stage || !players.length || !state) return
-    gameLoop()
+    gameLoop(Date.now())
   }, [context, myself, stage, players, state])
 
   useEffect(() => {

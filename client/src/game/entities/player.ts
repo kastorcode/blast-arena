@@ -1,16 +1,10 @@
 import { TILE_SIZE } from '#/constants'
 import { MoveDTO, PlayerDTO, SIDES } from '#/dto'
-import { Animation } from '~/game/animations/animation'
-import { PLAYER_D } from '~/game/animations/playerDown'
-import { PLAYER_DH } from '~/game/animations/playerDownHolding'
-import { PLAYER_L } from '~/game/animations/playerLeft'
-import { PLAYER_LH } from '~/game/animations/playerLeftHolding'
-import { PLAYER_R } from '~/game/animations/playerRight'
-import { PLAYER_RH } from '~/game/animations/playerRightHolding'
-import { PLAYER_U } from '~/game/animations/playerUp'
-import { PLAYER_UH } from '~/game/animations/playerUpHolding'
+import { animate, AnimController } from '~/game/animations/animation'
+import { PLAYER_D, PLAYER_DH, PLAYER_L, PLAYER_LH, PLAYER_R, PLAYER_RH, PLAYER_U, PLAYER_UH } from '~/game/animations/player'
+import { BombFactory } from '~/game/entities/bomb'
+import { GameState } from '~/game/entities/state'
 import socket from '~/services/socket'
-import { Block } from './block'
 
 interface PlayerProps extends PlayerDTO {
   index : number
@@ -20,11 +14,8 @@ interface PlayerProps extends PlayerDTO {
 }
 
 export interface Player {
-  anim : {
-    frameCurrent : number
-    lastRender   : number
-    sum          : boolean
-  }
+  anim     : AnimController['anim']
+  bombs    : number
   holding  : 0|1
   index    : number
   moving   : 0|1
@@ -37,16 +28,23 @@ export interface Player {
   y        : number
   setMyself              : () => void
   getAxes                : () => [number, number]
-  addKeyboardListener    : () => void
-  removeKeyboardListener : () => void
+  addKeyboardListener    : (state : GameState) => void
+  removeKeyboardListener : (state : GameState) => void
   startMove              : (side : SIDES) => void
-  moveTick               : (blocks : Block[]) => void
+  moveTick               : () => void
   moves                  : { [key in SIDES] : () => void }
   onMove                 : (dto : MoveDTO) => void
   stopMove               : (side : SIDES) => void
-  tick                   : (blocks : Block[]) => void
-  animate                : (DATA : Animation) => { sx : number, sy : number }
+  placeBomb              : (state : GameState) => void
+  tick                   : () => void
   render                 : (context : CanvasRenderingContext2D) => void
+}
+
+const BOMB_KEYS : {[key:string]:'B'} = {
+  'Z': 'B',
+  'X': 'B',
+  'C': 'B',
+  ' ': 'B'
 }
 
 const MOVE_KEYS : {[key:string]:SIDES} = {
@@ -65,11 +63,11 @@ const MOVING : {[key in SIDES]:boolean} = {
 }
 
 export function PlayerFactory (props : PlayerProps) : Player {
-  // @ts-expect-error
   const player : Player = {
     anim: {
       frameCurrent: 0, lastRender: 0, sum: true
     },
+    bombs: 1,
     holding: 0,
     index: props.index,
     moving: 0,
@@ -80,7 +78,7 @@ export function PlayerFactory (props : PlayerProps) : Player {
     x: props.x,
     y: props.y,
     sprite: new Image()
-  }
+  } as unknown as Player
   player.sprite.src = `/sprites/chars/${props.sprite}.png`
   player.setMyself = setMyself.bind(player)
   player.getAxes = getAxes.bind(player)
@@ -91,8 +89,8 @@ export function PlayerFactory (props : PlayerProps) : Player {
   player.moves = { D: moveDown.bind(player), L: moveLeft.bind(player), R: moveRight.bind(player), U: moveUp.bind(player) }
   player.onMove = onMove.bind(player)
   player.stopMove = stopMove.bind(player)
+  player.placeBomb = placeBomb.bind(player)
   player.tick = tick.bind(player)
-  player.animate = animate.bind(player)
   player.render = render.bind(player)
   return player
 }
@@ -107,20 +105,21 @@ function getAxes (this : Player) : [number, number] {
   return [x, y]
 }
 
-function addKeyboardListener (this : Player) {
-  document.addEventListener('keydown', keydownListener.bind(this))
+function addKeyboardListener (this:Player, state:GameState) {
+  document.addEventListener('keydown', event => keydownListener.call(this, event, state))
   document.addEventListener('keyup', keyupListener.bind(this))
 }
 
-function removeKeyboardListener (this : Player) {
-  document.removeEventListener('keydown', keydownListener.bind(this))
+function removeKeyboardListener (this:Player, state:GameState) {
+  document.removeEventListener('keydown', event => keydownListener.call(this, event, state))
   document.removeEventListener('keyup', keyupListener.bind(this))
 }
 
-function keydownListener (this : Player, event : KeyboardEvent) {
+function keydownListener (this:Player, event:KeyboardEvent, state:GameState) {
   event.preventDefault()
   const key = event.key.toUpperCase()
   if (MOVE_KEYS[key]) this.startMove(MOVE_KEYS[key])
+  if (BOMB_KEYS[key]) this.placeBomb(state)
 }
 
 function keyupListener (this : Player, event : KeyboardEvent) {
@@ -135,13 +134,10 @@ function startMove (this : Player, side : SIDES) {
   this.moving = 1
 }
 
-function moveTick (this : Player, blocks : Block[]) {
+function moveTick (this:Player) {
   if (!this.moving) return
   this.moves[this.side]()
   if (!this.myself) return
-  for (const i in blocks) {
-    if (blocks[i].tick(this)) break
-  }
   const dto:MoveDTO = { h:this.holding, i:this.index, m:this.moving, s:this.side, x:this.x, y:this.y }
   socket.emit('mv', dto)
 }
@@ -200,33 +196,25 @@ function stopMove (this : Player, side : SIDES) {
   socket.emit('mv', dto)
 }
 
-function tick (this : Player, blocks : Block[]) {
-  this.moveTick(blocks)
+function placeBomb (this:Player, state:GameState) {
+  if (!this.bombs) return
+  //this.bombs--
+  state.entities.add(BombFactory({
+    player     : this,
+    playerIndex: this.index,
+    state
+  }))
 }
 
-function animate (this : Player, DATA : Animation) {
-  const currentTime = Date.now()
-  if (currentTime - this.anim.lastRender > DATA.ANIM_INTERVAL) {
-    if (this.anim.frameCurrent === DATA.FRAME_END) {
-      this.anim.sum = false
-    }
-    else if (this.anim.frameCurrent === DATA.FRAME_START) {
-      this.anim.sum = true
-    }
-    this.anim.sum ? this.anim.frameCurrent++ : this.anim.frameCurrent--
-    this.anim.lastRender = currentTime
-  }
-  return {
-    sx: this.anim.frameCurrent * DATA.FRAME_WIDTH,
-    sy: DATA.COLUMN * DATA.FRAME_HEIGHT
-  }
+function tick (this:Player) {
+  this.moveTick()
 }
 
 function render (this : Player, context : CanvasRenderingContext2D) {
   if (this.side === 'D') {
     if (this.holding) {
       if (this.moving) {
-        const { sx, sy } = this.animate(PLAYER_DH)
+        const { sx, sy } = animate(this, PLAYER_DH)
         context.drawImage(this.sprite, sx, sy, PLAYER_DH.FRAME_WIDTH, PLAYER_DH.FRAME_HEIGHT, this.x, this.y, PLAYER_DH.FRAME_WIDTH, PLAYER_DH.FRAME_HEIGHT)
       }
       else {
@@ -234,7 +222,7 @@ function render (this : Player, context : CanvasRenderingContext2D) {
       }
     }
     else if (this.moving) {
-      const { sx, sy } = this.animate(PLAYER_D)
+      const { sx, sy } = animate(this, PLAYER_D)
       context.drawImage(this.sprite, sx, sy, PLAYER_D.FRAME_WIDTH, PLAYER_D.FRAME_HEIGHT, this.x, this.y, PLAYER_D.FRAME_WIDTH, PLAYER_D.FRAME_HEIGHT)
     }
     else {
@@ -244,7 +232,7 @@ function render (this : Player, context : CanvasRenderingContext2D) {
   else if (this.side === 'U') {
     if (this.holding) {
       if (this.moving) {
-        const { sx, sy } = this.animate(PLAYER_UH)
+        const { sx, sy } = animate(this, PLAYER_UH)
         context.drawImage(this.sprite, sx, sy, PLAYER_UH.FRAME_WIDTH, PLAYER_UH.FRAME_HEIGHT, this.x, this.y, PLAYER_UH.FRAME_WIDTH, PLAYER_UH.FRAME_HEIGHT)
       }
       else {
@@ -252,7 +240,7 @@ function render (this : Player, context : CanvasRenderingContext2D) {
       }
     }
     else if (this.moving) {
-      const { sx, sy } = this.animate(PLAYER_U)
+      const { sx, sy } = animate(this, PLAYER_U)
       context.drawImage(this.sprite, sx, sy, PLAYER_U.FRAME_WIDTH, PLAYER_U.FRAME_HEIGHT, this.x, this.y, PLAYER_U.FRAME_WIDTH, PLAYER_U.FRAME_HEIGHT)
     }
     else {
@@ -262,7 +250,7 @@ function render (this : Player, context : CanvasRenderingContext2D) {
   else if (this.side === 'R') {
     if (this.holding) {
       if (this.moving) {
-        const { sx, sy } = this.animate(PLAYER_RH)
+        const { sx, sy } = animate(this, PLAYER_RH)
         context.drawImage(this.sprite, sx, sy, PLAYER_RH.FRAME_WIDTH, PLAYER_RH.FRAME_HEIGHT, this.x, this.y, PLAYER_RH.FRAME_WIDTH, PLAYER_RH.FRAME_HEIGHT)
       }
       else {
@@ -270,7 +258,7 @@ function render (this : Player, context : CanvasRenderingContext2D) {
       }
     }
     else if (this.moving) {
-      const { sx, sy } = this.animate(PLAYER_R)
+      const { sx, sy } = animate(this, PLAYER_R)
       context.drawImage(this.sprite, sx, sy, PLAYER_R.FRAME_WIDTH, PLAYER_R.FRAME_HEIGHT, this.x, this.y, PLAYER_R.FRAME_WIDTH, PLAYER_R.FRAME_HEIGHT)
     }
     else {
@@ -280,7 +268,7 @@ function render (this : Player, context : CanvasRenderingContext2D) {
   else {
     if (this.holding) {
       if (this.moving) {
-        const { sx, sy } = this.animate(PLAYER_LH)
+        const { sx, sy } = animate(this, PLAYER_LH)
         context.drawImage(this.sprite, sx, sy, PLAYER_LH.FRAME_WIDTH, PLAYER_LH.FRAME_HEIGHT, this.x, this.y, PLAYER_LH.FRAME_WIDTH, PLAYER_LH.FRAME_HEIGHT)
       }
       else {
@@ -288,7 +276,7 @@ function render (this : Player, context : CanvasRenderingContext2D) {
       }
     }
     else if (this.moving) {
-      const { sx, sy } = this.animate(PLAYER_L)
+      const { sx, sy } = animate(this, PLAYER_L)
       context.drawImage(this.sprite, sx, sy, PLAYER_L.FRAME_WIDTH, PLAYER_L.FRAME_HEIGHT, this.x, this.y, PLAYER_L.FRAME_WIDTH, PLAYER_L.FRAME_HEIGHT)
     }
     else {
