@@ -3,7 +3,7 @@ import { MoveDTO, StartGameDTO } from '#/dto'
 import { BlocksFactory } from '~/game/entities/block'
 import { EntitiesFactory } from '~/game/entities/factory'
 import { Player, PlayerFactory } from '~/game/entities/player'
-import { Stage, StageFactory } from '~/game/entities/stage'
+import { StageFactory } from '~/game/entities/stage'
 import { GameState } from '~/game/entities/state'
 import socket from '~/services/socket'
 
@@ -13,7 +13,6 @@ export default function Canvas () {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [context, setContext] = useState<CanvasRenderingContext2D>()
   const [myself, setMyself] = useState<number>()
-  const [stage, setStage] = useState<Stage>()
   const [players, setPlayers] = useState<Player[]>([])
   const [state, setState] = useState<GameState>()
 
@@ -44,9 +43,9 @@ export default function Canvas () {
     // @ts-ignore
     context.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height)
     // @ts-ignore
-    stage.render(context)
+    state.stage.render(context)
     // @ts-ignore
-    state.blocks.render(context, stage)
+    state.blocks.render(context, state)
     for (const [_,entity] of (state as GameState).entities.entities) {
       entity.render(context as CanvasRenderingContext2D)
     }
@@ -56,7 +55,6 @@ export default function Canvas () {
 
   function startGame (dto : StartGameDTO) {
     socket.off('start_game', startGame)
-    setStage(StageFactory({bg:dto.state.stage}))
     setPlayers(dto.players.map((p,index) => PlayerFactory({
       ...p,
       index,
@@ -67,7 +65,8 @@ export default function Canvas () {
     setState({
       ...dto.state,
       blocks: BlocksFactory(dto.state.blocks),
-      entities: EntitiesFactory()
+      entities: EntitiesFactory(),
+      stage: StageFactory({bg:dto.state.stage})
     })
   }
 
@@ -87,9 +86,9 @@ export default function Canvas () {
   }, [myself, players, state])
 
   useEffect(() => {
-    if (!context || typeof myself !== 'number' || !stage || !players.length || !state) return
+    if (!context || typeof myself !== 'number' || !players.length || !state) return
     gameLoop(Date.now())
-  }, [context, myself, stage, players, state])
+  }, [context, myself, players, state])
 
   useEffect(() => {
     socket.on('myself', setMyself)

@@ -1,13 +1,13 @@
 export interface Animation {
   ANIM_INTERVAL : number
-  COLUMN        : number
+  ROW           : number
   FRAME_START   : number
   FRAME_END     : number
   FRAME_WIDTH   : number
   FRAME_HEIGHT  : number
 }
 
-export interface AnimController {
+export interface AnimControl {
   anim : {
     frameCurrent : number
     lastRender   : number
@@ -15,7 +15,7 @@ export interface AnimController {
   }
 }
 
-export function animate (o : AnimController, D : Animation) {
+export function animate (o : AnimControl, D : Animation) {
   const currentTime = Date.now()
   if (currentTime - o.anim.lastRender > D.ANIM_INTERVAL) {
     if (o.anim.frameCurrent === D.FRAME_END) {
@@ -29,6 +29,6 @@ export function animate (o : AnimController, D : Animation) {
   }
   return {
     sx: o.anim.frameCurrent * D.FRAME_WIDTH,
-    sy: D.COLUMN * D.FRAME_HEIGHT
+    sy: D.ROW * D.FRAME_HEIGHT
   }
 }

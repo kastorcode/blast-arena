@@ -1,34 +1,47 @@
 import { TILE_SIZE } from '#/constants'
 import { BlockDTO, SIDES } from '#/dto'
-import { Stage } from '~/game/entities/stage'
+import { animate, AnimControl } from '~/game/animations/animation'
+import { BLOCK } from '~/game/animations/block'
 import { GameState } from '~/game/entities/state'
 import { isColliding } from '~/game/util/collision'
 import { Player } from './player'
 import TILE_IMG from '../components/tileImg'
 
 interface Block extends BlockDTO {
-  sides   : {[key in SIDES] : (p:Player) => void}
+  anim        : AnimControl['anim']
+  axes        : [number, number]
+  destroying  : boolean
+  destroyTime : number
+  sides       : {[key in SIDES] : (p:Player) => void}
+  destroy : () => void
   tick    : (player:Player) => boolean
-  render  : (context:CanvasRenderingContext2D, stage:Stage) => void
+  render  : (context:CanvasRenderingContext2D, state:GameState) => void
 }
 
 export interface Blocks {
   blocks : (Block|null)[][]
-  tick   : (player:Player) => void
-  render : (context:CanvasRenderingContext2D, stage:Stage) => void
+  getBlock     : (x:number, y:number) => Block|null
+  destroyBlock : (axes:[number, number]) => void
+  tick         : (player:Player) => void
+  render       : (context:CanvasRenderingContext2D, state:GameState) => void
 }
 
 export function BlocksFactory (blocksDto : (BlockDTO|null)[][]) : Blocks {
-  const blocks = blocksDto.map(row => row.map(dto => {
+  const blocks = blocksDto.map((row,i) => row.map((dto,j) => {
     if (!dto) return null
     const block:Block = dto as Block
     if (block.t === 'D') {
+      block.anim = {frameCurrent:0, lastRender:0, sum:true}
+      block.axes = [i, j]
+      block.destroying = false
+      block.destroy = startDestroyBlock.bind(block)
       block.tick = tickD.bind(block)
-      block.render = renderD.bind(block)
+      block.render = renderAndDestroy.bind(block)
     }
     else {
+      block.destroy = () => {}
       block.tick = tickI.bind(block)
-      block.render = renderI.bind(block)
+      block.render = () => {}
     }
     block.sides = {
       U: collidedDown.bind(block),
@@ -38,9 +51,11 @@ export function BlocksFactory (blocksDto : (BlockDTO|null)[][]) : Blocks {
     }
     return block
   }))
+  const getBlock = getOneBlock.bind(blocks)
+  const destroyBlock = nullifyBlock.bind(blocks)
   const tick = tickPlayer.bind(blocks)
   const render = renderBlocks.bind(blocks)
-  return { blocks, tick, render }
+  return { blocks, getBlock, destroyBlock, tick, render }
 }
 
 function collidedUp (this:Block, p:Player) {
@@ -57,6 +72,20 @@ function collidedLeft (this:Block, p:Player) {
 
 function collidedRight (this:Block, p:Player) {
   p.x = this.x + 17
+}
+
+function getOneBlock (this:Blocks['blocks'], x:number, y:number) : Block|null {
+  return this[x][y]
+}
+
+function startDestroyBlock (this:Block) {
+  this.destroying = true
+  this.destroyTime = Date.now() + 600
+  this.tick = () => false
+}
+
+function nullifyBlock (this:Blocks['blocks'], axes:[number, number]) {
+  this[axes[0]][axes[1]] = null
 }
 
 function tickD (this:Block, player:Player) : boolean {
@@ -148,14 +177,21 @@ function tickPlayer (this:Blocks['blocks'], player:Player) {
   this[i][j] && this[i][j]?.tick(player)
 }
 
-function renderD (this:Block, context:CanvasRenderingContext2D, stage:Stage) {
-  context.drawImage(stage.bg, 0, 208, 16, 16, this.x, this.y, 16, 16)
+function renderAndDestroy (this:Block, context:CanvasRenderingContext2D, state:GameState) {
+  if (this.destroying) {
+    if (Date.now() > this.destroyTime) {
+      state.blocks.destroyBlock(this.axes)
+    }
+    else {
+      const { sx, sy } = animate(this, BLOCK)
+      context.drawImage(state.stage.bg, sx, sy, BLOCK.FRAME_WIDTH, BLOCK.FRAME_HEIGHT, this.x, this.y, BLOCK.FRAME_WIDTH, BLOCK.FRAME_HEIGHT)
+    }
+  }
+  else {
+    context.drawImage(state.stage.bg, 0, 208, TILE_SIZE, TILE_SIZE, this.x, this.y, TILE_SIZE, TILE_SIZE)
+  }
 }
 
-function renderI (this:Block, context:CanvasRenderingContext2D, stage:Stage) {
-  context.drawImage(TILE_IMG, 0, 0, 16, 16, this.x, this.y, 16, 16)
-}
-
-function renderBlocks (this:Blocks['blocks'], context:CanvasRenderingContext2D, stage:Stage) {
-  this.forEach(row => row.forEach(b => b && b.render(context, stage)))
+function renderBlocks (this:Blocks['blocks'], context:CanvasRenderingContext2D, state:GameState) {
+  this.forEach(row => row.forEach(b => b && b.render(context, state)))
 }

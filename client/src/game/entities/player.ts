@@ -1,6 +1,6 @@
 import { TILE_SIZE } from '#/constants'
 import { MoveDTO, PlayerDTO, SIDES } from '#/dto'
-import { animate, AnimController } from '~/game/animations/animation'
+import { animate, AnimControl } from '~/game/animations/animation'
 import { PLAYER_D, PLAYER_DH, PLAYER_L, PLAYER_LH, PLAYER_R, PLAYER_RH, PLAYER_U, PLAYER_UH } from '~/game/animations/player'
 import { BombFactory } from '~/game/entities/bomb'
 import { GameState } from '~/game/entities/state'
@@ -14,18 +14,19 @@ interface PlayerProps extends PlayerDTO {
 }
 
 export interface Player {
-  anim     : AnimController['anim']
-  bombs    : number
-  holding  : 0|1
-  index    : number
-  moving   : 0|1
-  myself   : boolean
-  nick     : PlayerDTO['nick']
-  side     : SIDES
-  sprite   : HTMLImageElement
-  speed    : number
-  x        : number
-  y        : number
+  anim      : AnimControl['anim']
+  bombReach : number
+  bombs     : number
+  holding   : 0|1
+  index     : number
+  moving    : 0|1
+  myself    : boolean
+  nick      : PlayerDTO['nick']
+  side      : SIDES
+  sprite    : HTMLImageElement
+  speed     : number
+  x         : number
+  y         : number
   setMyself              : () => void
   getAxes                : () => [number, number]
   addKeyboardListener    : (state : GameState) => void
@@ -64,9 +65,8 @@ const MOVING : {[key in SIDES]:boolean} = {
 
 export function PlayerFactory (props : PlayerProps) : Player {
   const player : Player = {
-    anim: {
-      frameCurrent: 0, lastRender: 0, sum: true
-    },
+    anim: {frameCurrent:0, lastRender:0, sum:true},
+    bombReach: 2,
     bombs: 1,
     holding: 0,
     index: props.index,
@@ -198,10 +198,11 @@ function stopMove (this : Player, side : SIDES) {
 
 function placeBomb (this:Player, state:GameState) {
   if (!this.bombs) return
-  //this.bombs--
+  this.bombs--
   state.entities.add(BombFactory({
     player     : this,
     playerIndex: this.index,
+    reach      : this.bombReach,
     state
   }))
 }
@@ -218,7 +219,7 @@ function render (this : Player, context : CanvasRenderingContext2D) {
         context.drawImage(this.sprite, sx, sy, PLAYER_DH.FRAME_WIDTH, PLAYER_DH.FRAME_HEIGHT, this.x, this.y, PLAYER_DH.FRAME_WIDTH, PLAYER_DH.FRAME_HEIGHT)
       }
       else {
-        context.drawImage(this.sprite, PLAYER_DH.FRAME_WIDTH*4, PLAYER_DH.COLUMN, PLAYER_DH.FRAME_WIDTH, PLAYER_DH.FRAME_HEIGHT, this.x, this.y, PLAYER_DH.FRAME_WIDTH, PLAYER_DH.FRAME_HEIGHT)
+        context.drawImage(this.sprite, PLAYER_DH.FRAME_WIDTH*4, PLAYER_DH.ROW, PLAYER_DH.FRAME_WIDTH, PLAYER_DH.FRAME_HEIGHT, this.x, this.y, PLAYER_DH.FRAME_WIDTH, PLAYER_DH.FRAME_HEIGHT)
       }
     }
     else if (this.moving) {
@@ -226,7 +227,7 @@ function render (this : Player, context : CanvasRenderingContext2D) {
       context.drawImage(this.sprite, sx, sy, PLAYER_D.FRAME_WIDTH, PLAYER_D.FRAME_HEIGHT, this.x, this.y, PLAYER_D.FRAME_WIDTH, PLAYER_D.FRAME_HEIGHT)
     }
     else {
-      context.drawImage(this.sprite, PLAYER_D.FRAME_WIDTH, PLAYER_D.COLUMN, PLAYER_D.FRAME_WIDTH, PLAYER_D.FRAME_HEIGHT, this.x, this.y, PLAYER_D.FRAME_WIDTH, PLAYER_D.FRAME_HEIGHT)
+      context.drawImage(this.sprite, PLAYER_D.FRAME_WIDTH, PLAYER_D.ROW, PLAYER_D.FRAME_WIDTH, PLAYER_D.FRAME_HEIGHT, this.x, this.y, PLAYER_D.FRAME_WIDTH, PLAYER_D.FRAME_HEIGHT)
     }
   }
   else if (this.side === 'U') {
@@ -254,7 +255,7 @@ function render (this : Player, context : CanvasRenderingContext2D) {
         context.drawImage(this.sprite, sx, sy, PLAYER_RH.FRAME_WIDTH, PLAYER_RH.FRAME_HEIGHT, this.x, this.y, PLAYER_RH.FRAME_WIDTH, PLAYER_RH.FRAME_HEIGHT)
       }
       else {
-        context.drawImage(this.sprite, PLAYER_RH.FRAME_WIDTH*4, PLAYER_RH.FRAME_HEIGHT*PLAYER_RH.COLUMN, PLAYER_RH.FRAME_WIDTH, PLAYER_RH.FRAME_HEIGHT, this.x, this.y, PLAYER_RH.FRAME_WIDTH, PLAYER_RH.FRAME_HEIGHT)
+        context.drawImage(this.sprite, PLAYER_RH.FRAME_WIDTH*4, PLAYER_RH.FRAME_HEIGHT*PLAYER_RH.ROW, PLAYER_RH.FRAME_WIDTH, PLAYER_RH.FRAME_HEIGHT, this.x, this.y, PLAYER_RH.FRAME_WIDTH, PLAYER_RH.FRAME_HEIGHT)
       }
     }
     else if (this.moving) {
@@ -262,7 +263,7 @@ function render (this : Player, context : CanvasRenderingContext2D) {
       context.drawImage(this.sprite, sx, sy, PLAYER_R.FRAME_WIDTH, PLAYER_R.FRAME_HEIGHT, this.x, this.y, PLAYER_R.FRAME_WIDTH, PLAYER_R.FRAME_HEIGHT)
     }
     else {
-      context.drawImage(this.sprite, PLAYER_R.FRAME_WIDTH, PLAYER_R.FRAME_HEIGHT*PLAYER_R.COLUMN, PLAYER_R.FRAME_WIDTH, PLAYER_R.FRAME_HEIGHT, this.x, this.y, PLAYER_R.FRAME_WIDTH, PLAYER_R.FRAME_HEIGHT)
+      context.drawImage(this.sprite, PLAYER_R.FRAME_WIDTH, PLAYER_R.FRAME_HEIGHT*PLAYER_R.ROW, PLAYER_R.FRAME_WIDTH, PLAYER_R.FRAME_HEIGHT, this.x, this.y, PLAYER_R.FRAME_WIDTH, PLAYER_R.FRAME_HEIGHT)
     }
   }
   else {
@@ -272,7 +273,7 @@ function render (this : Player, context : CanvasRenderingContext2D) {
         context.drawImage(this.sprite, sx, sy, PLAYER_LH.FRAME_WIDTH, PLAYER_LH.FRAME_HEIGHT, this.x, this.y, PLAYER_LH.FRAME_WIDTH, PLAYER_LH.FRAME_HEIGHT)
       }
       else {
-        context.drawImage(this.sprite, PLAYER_LH.FRAME_WIDTH*4, PLAYER_LH.FRAME_HEIGHT*PLAYER_LH.COLUMN, PLAYER_LH.FRAME_WIDTH, PLAYER_LH.FRAME_HEIGHT, this.x, this.y, PLAYER_LH.FRAME_WIDTH, PLAYER_LH.FRAME_HEIGHT)
+        context.drawImage(this.sprite, PLAYER_LH.FRAME_WIDTH*4, PLAYER_LH.FRAME_HEIGHT*PLAYER_LH.ROW, PLAYER_LH.FRAME_WIDTH, PLAYER_LH.FRAME_HEIGHT, this.x, this.y, PLAYER_LH.FRAME_WIDTH, PLAYER_LH.FRAME_HEIGHT)
       }
     }
     else if (this.moving) {
@@ -280,7 +281,7 @@ function render (this : Player, context : CanvasRenderingContext2D) {
       context.drawImage(this.sprite, sx, sy, PLAYER_L.FRAME_WIDTH, PLAYER_L.FRAME_HEIGHT, this.x, this.y, PLAYER_L.FRAME_WIDTH, PLAYER_L.FRAME_HEIGHT)
     }
     else {
-      context.drawImage(this.sprite, PLAYER_L.FRAME_WIDTH, PLAYER_L.FRAME_HEIGHT*PLAYER_L.COLUMN, PLAYER_L.FRAME_WIDTH, PLAYER_L.FRAME_HEIGHT, this.x, this.y, PLAYER_L.FRAME_WIDTH, PLAYER_L.FRAME_HEIGHT)
+      context.drawImage(this.sprite, PLAYER_L.FRAME_WIDTH, PLAYER_L.FRAME_HEIGHT*PLAYER_L.ROW, PLAYER_L.FRAME_WIDTH, PLAYER_L.FRAME_HEIGHT, this.x, this.y, PLAYER_L.FRAME_WIDTH, PLAYER_L.FRAME_HEIGHT)
     }
   }
 }

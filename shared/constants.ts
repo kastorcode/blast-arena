@@ -1,3 +1,5 @@
+export const BLASTS = 1
+
 export const BOMBS = 1
 
 export const INITIAL_POSITION = [[17,9], [209,9], [17,169], [209,169]]

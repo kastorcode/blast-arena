@@ -1,5 +1,5 @@
 import { Server } from 'socket.io'
-import { BOMBS, INITIAL_POSITION, SPEED, SPRITES, STAGES } from '#/constants'
+import { BLASTS, BOMBS, INITIAL_POSITION, SPEED, SPRITES, STAGES } from '#/constants'
 import { BlockDTO, GameStateDTO, LobbyDTO, StartGameDTO } from '#/dto'
 import { Socket } from '~/extends'
 import { states } from '~/states'
@@ -74,10 +74,11 @@ function blocksFactory () : (BlockDTO|null)[][] {
 
 function stateFactory () : GameStateDTO {
   const blocks = blocksFactory()
+  const blast = Math.floor(Math.random() * BLASTS)
   const bomb = Math.floor(Math.random() * BOMBS)
   const stage = Math.floor(Math.random() * STAGES)
   return {
-    blocks, bomb, stage,
+    blast, blocks, bomb, stage,
     positions: INITIAL_POSITION,
     speed: SPEED
   }

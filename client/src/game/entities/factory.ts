@@ -1,14 +1,14 @@
 import { GameState } from './state'
 
 interface Entity {
-  id     : number
+  id     : string
   setId  : (id : number) => void
   tick   : (state : GameState) => void
   render : (context : CanvasRenderingContext2D) => void
 }
 
 export interface Entities {
-  entities : Map<number,Entity>
+  entities : Map<string,Entity>
   add      : (entity : Entity) => void
   remove   : (entity : Entity) => void
 }
@@ -23,12 +23,10 @@ export function EntitiesFactory () : Entities {
 }
 
 function add (this : Entities, entity : Entity) {
-  const id = this.entities.size + 1
-  entity.setId(id)
-  this.entities.set(id, entity)
+  entity.setId(Math.floor(Math.random() * 9999999))
+  this.entities.set(entity.id, entity)
 }
 
 function remove (this : Entities, entity : Entity) {
-  if (!this.entities.has(entity.id)) return
   this.entities.delete(entity.id)
 }
