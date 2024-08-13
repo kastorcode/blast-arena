@@ -20,6 +20,7 @@ interface Bomb {
   armed        : boolean
   axes         : [number, number]
   blast        : Blast
+  detonated    : boolean
   detonateTime : number
   directions   : Directions
   id           : string
@@ -30,10 +31,11 @@ interface Bomb {
   sprite       : HTMLImageElement
   x            : number
   y            : number
-  setId    : (id:number) => void
-  detonate : (state:GameState) => void
-  tick     : (state:GameState) => void
-  render   : (context:CanvasRenderingContext2D) => void
+  setId                : (id:number) => void
+  detonate             : (state:GameState) => void
+  checkPlayerCollision : (state:GameState) => void
+  tick                 : (state:GameState) => void
+  render               : (context:CanvasRenderingContext2D) => void
 }
 
 export function BombFactory (props : BombProps) : Bomb {
@@ -48,15 +50,17 @@ export function BombFactory (props : BombProps) : Bomb {
   bomb.sprite.src = `/sprites/bombs/${props.state.bomb}.png`
   bomb.anim = {frameCurrent:0, lastRender:0, sum:true}
   bomb.armed = true
+  bomb.detonated = false
   bomb.blast = BlastFactory(props.state)
   bomb.directions = {up:0, right:0, down:0, left:0}
   bomb.id = 'B'
   bomb.setId = setId.bind(bomb)
   bomb.detonate = detonate.bind(bomb)
+  bomb.checkPlayerCollision = checkPlayerCollision.bind(bomb)
   bomb.tick = tick.bind(bomb)
   bomb.render = render.bind(bomb)
   bomb.detonateTime = Date.now() + 3000
-  bomb.removeTime = bomb.detonateTime + 1000
+  bomb.removeTime = bomb.detonateTime + 1500
   return bomb
 }
 
@@ -65,6 +69,8 @@ function setId (this:Bomb, id:number) {
 }
 
 function detonate (this:Bomb, state:GameState) {
+  this.armed = false
+  this.detonated = true
   for (let i = this.axes[0]; i > -1; i--) {
     if (this.directions.up === this.reach) break
     const b = state.blocks.getBlock(i, this.axes[1])
@@ -103,14 +109,44 @@ function detonate (this:Bomb, state:GameState) {
   }
 }
 
-function tick (this:Bomb, state:GameState) {
-  if (this.armed && Date.now() > this.detonateTime) {
-    if (this.player) this.player.bombs++
-    this.armed = false
-    this.detonate(state)
+function checkPlayerCollision (this:Bomb, state:GameState) {
+  const [x, y] = state.players.myself?.getAxes() as [number, number]
+  for (let i = this.directions.up - 1; i > -1; i--) {
+    if (x === this.axes[0] - i && y === this.axes[1]) {
+      state.players.myself?.kill()
+      return
+    }
   }
-  else if (Date.now() > this.removeTime) {
+  for (let i = this.directions.down - 1; i > -1; i--) {
+    if (x === this.axes[0] + i && y === this.axes[1]) {
+      state.players.myself?.kill()
+      return
+    }
+  }
+  for (let i = this.directions.left - 1; i > -1; i--) {
+    if (x === this.axes[0] && y === this.axes[1] - i) {
+      state.players.myself?.kill()
+      return
+    }
+  }
+  for (let i = this.directions.right - 1; i > -1; i--) {
+    if (x === this.axes[0] && y === this.axes[1] + i) {
+      state.players.myself?.kill()
+      return
+    }
+  }
+}
+
+function tick (this:Bomb, state:GameState) {
+  if (this.detonated) {
+    this.checkPlayerCollision(state)
+  }
+  if (Date.now() > this.removeTime) {
     state.entities.remove(this)
+  }
+  else if (this.armed && Date.now() > this.detonateTime) {
+    if (this.player) this.player.bombs++
+    this.detonate(state)
   }
 }
 

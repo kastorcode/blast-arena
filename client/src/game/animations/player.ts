@@ -61,3 +61,11 @@ export const PLAYER_RH : Animation = {
   FRAME_START: 3,
   FRAME_END  : 5
 }
+
+export const PLAYER_K : Animation = {
+  ...AnimationBase,
+  ANIM_INTERVAL: 50,
+  ROW          : 4,
+  FRAME_START  : 0,
+  FRAME_END    : 7
+}

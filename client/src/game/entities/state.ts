@@ -1,5 +1,6 @@
 import { Blocks } from './block'
 import { Entities } from './factory'
+import { Players } from './players'
 import { Stage } from './stage'
 
 export interface GameState {
@@ -7,5 +8,6 @@ export interface GameState {
   blocks   : Blocks
   bomb     : number
   entities : Entities
+  players  : Players
   stage    : Stage
 }

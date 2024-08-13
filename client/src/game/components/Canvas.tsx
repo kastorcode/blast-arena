@@ -2,7 +2,8 @@ import { useEffect, useRef, useState } from 'react'
 import { MoveDTO, StartGameDTO } from '#/dto'
 import { BlocksFactory } from '~/game/entities/block'
 import { EntitiesFactory } from '~/game/entities/factory'
-import { Player, PlayerFactory } from '~/game/entities/player'
+import { Player } from '~/game/entities/player'
+import { PlayersFactory } from '~/game/entities/players'
 import { StageFactory } from '~/game/entities/stage'
 import { GameState } from '~/game/entities/state'
 import socket from '~/services/socket'
@@ -13,7 +14,6 @@ export default function Canvas () {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [context, setContext] = useState<CanvasRenderingContext2D>()
   const [myself, setMyself] = useState<number>()
-  const [players, setPlayers] = useState<Player[]>([])
   const [state, setState] = useState<GameState>()
 
   function gameLoop (timestamp : number) {
@@ -31,64 +31,35 @@ export default function Canvas () {
   }
 
   function tick () {
-    for (const [_,entity] of (state as GameState).entities.entities) {
-      entity.tick(state as GameState)
-    }
-    players.forEach(p => p.tick())
-    // @ts-ignore
-    state.blocks.tick(players[myself])
+    state?.entities.tick(state)
+    state?.players.tick()
+    state?.blocks.tick(state.players.myself as Player)
   }
 
   function render () {
     // @ts-ignore
-    context.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height)
-    // @ts-ignore
-    state.stage.render(context)
-    // @ts-ignore
-    state.blocks.render(context, state)
-    for (const [_,entity] of (state as GameState).entities.entities) {
-      entity.render(context as CanvasRenderingContext2D)
-    }
-    // @ts-ignore
-    players.forEach(p => p.render(context))
+    context?.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height)
+    state?.stage.render(context as CanvasRenderingContext2D)
+    state?.blocks.render(context as CanvasRenderingContext2D, state)
+    state?.entities.render(context as CanvasRenderingContext2D)
+    state?.players.render(context as CanvasRenderingContext2D)
   }
 
   function startGame (dto : StartGameDTO) {
     socket.off('start_game', startGame)
-    setPlayers(dto.players.map((p,index) => PlayerFactory({
-      ...p,
-      index,
-      speed: dto.state.speed,
-      x: dto.state.positions[index][0],
-      y: dto.state.positions[index][1]
-    })))
     setState({
       ...dto.state,
       blocks: BlocksFactory(dto.state.blocks),
       entities: EntitiesFactory(),
+      players: PlayersFactory(dto.players),
       stage: StageFactory({bg:dto.state.stage})
     })
   }
 
   function onMove (dto : MoveDTO) {
-    if (dto.i === myself || !players[dto.i]) return
-    players[dto.i].onMove(dto)
+    if (dto.i === myself) return
+    state?.players.players[dto.i].onMove(dto)
   }
-
-  useEffect(() => {
-    if (typeof myself !== 'number' || !players[myself] || !state) return
-    socket.off('myself', setMyself)
-    players[myself].setMyself()
-    players[myself].addKeyboardListener(state)
-    return () => {
-      players[myself].removeKeyboardListener(state)
-    }
-  }, [myself, players, state])
-
-  useEffect(() => {
-    if (!context || typeof myself !== 'number' || !players.length || !state) return
-    gameLoop(Date.now())
-  }, [context, myself, players, state])
 
   useEffect(() => {
     socket.on('myself', setMyself)
@@ -99,7 +70,23 @@ export default function Canvas () {
       socket.off('start_game', startGame)
       socket.off('mv', onMove)
     }
-  }, [players])
+  }, [state])
+
+  useEffect(() => {
+    if (typeof myself !== 'number' || !state) return
+    socket.off('myself', setMyself)
+    socket.off('start_game', startGame)
+    state.players.setMyself(myself)
+    state.players.myself?.addKeyboardListener(state)
+    return () => {
+      state.players.myself?.removeKeyboardListener(state)
+    }
+  }, [myself, state])
+
+  useEffect(() => {
+    if (!context || typeof myself !== 'number' || !state) return
+    gameLoop(Date.now())
+  }, [context, myself, state])
 
   useEffect(() => {
     if (!socket || !canvasRef.current) return

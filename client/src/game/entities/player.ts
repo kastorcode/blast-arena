@@ -1,7 +1,7 @@
 import { TILE_SIZE } from '#/constants'
 import { MoveDTO, PlayerDTO, SIDES } from '#/dto'
 import { animate, AnimControl } from '~/game/animations/animation'
-import { PLAYER_D, PLAYER_DH, PLAYER_L, PLAYER_LH, PLAYER_R, PLAYER_RH, PLAYER_U, PLAYER_UH } from '~/game/animations/player'
+import { PLAYER_D, PLAYER_DH, PLAYER_K, PLAYER_L, PLAYER_LH, PLAYER_R, PLAYER_RH, PLAYER_U, PLAYER_UH } from '~/game/animations/player'
 import { BombFactory } from '~/game/entities/bomb'
 import { GameState } from '~/game/entities/state'
 import socket from '~/services/socket'
@@ -14,31 +14,33 @@ interface PlayerProps extends PlayerDTO {
 }
 
 export interface Player {
-  anim      : AnimControl['anim']
-  bombReach : number
-  bombs     : number
-  holding   : 0|1
-  index     : number
-  moving    : 0|1
-  myself    : boolean
-  nick      : PlayerDTO['nick']
-  side      : SIDES
-  sprite    : HTMLImageElement
-  speed     : number
-  x         : number
-  y         : number
+  anim       : AnimControl['anim']
+  bombReach  : number
+  bombs      : number
+  holding    : 0|1
+  index      : number
+  moving     : 0|1
+  myself     : boolean
+  nick       : PlayerDTO['nick']
+  removeTime : number
+  side       : SIDES
+  sprite     : HTMLImageElement
+  speed      : number
+  x          : number
+  y          : number
   setMyself              : () => void
   getAxes                : () => [number, number]
-  addKeyboardListener    : (state : GameState) => void
-  removeKeyboardListener : (state : GameState) => void
-  startMove              : (side : SIDES) => void
+  addKeyboardListener    : (state:GameState) => void
+  removeKeyboardListener : (state:GameState) => void
+  startMove              : (side:SIDES) => void
   moveTick               : () => void
-  moves                  : { [key in SIDES] : () => void }
-  onMove                 : (dto : MoveDTO) => void
-  stopMove               : (side : SIDES) => void
-  placeBomb              : (state : GameState) => void
+  moves                  : {[key in SIDES] : () => void}
+  onMove                 : (dto:MoveDTO) => void
+  stopMove               : (side:SIDES) => void
+  placeBomb              : (state:GameState) => void
+  kill                   : () => void
   tick                   : () => void
-  render                 : (context : CanvasRenderingContext2D) => void
+  render                 : (context:CanvasRenderingContext2D) => void
 }
 
 const BOMB_KEYS : {[key:string]:'B'} = {
@@ -90,6 +92,7 @@ export function PlayerFactory (props : PlayerProps) : Player {
   player.onMove = onMove.bind(player)
   player.stopMove = stopMove.bind(player)
   player.placeBomb = placeBomb.bind(player)
+  player.kill = kill.bind(player)
   player.tick = tick.bind(player)
   player.render = render.bind(player)
   return player
@@ -117,6 +120,7 @@ function removeKeyboardListener (this:Player, state:GameState) {
 
 function keydownListener (this:Player, event:KeyboardEvent, state:GameState) {
   event.preventDefault()
+  if (this.removeTime) return
   const key = event.key.toUpperCase()
   if (MOVE_KEYS[key]) this.startMove(MOVE_KEYS[key])
   if (BOMB_KEYS[key]) this.placeBomb(state)
@@ -124,6 +128,7 @@ function keydownListener (this:Player, event:KeyboardEvent, state:GameState) {
 
 function keyupListener (this : Player, event : KeyboardEvent) {
   event.preventDefault()
+  if (this.removeTime) return
   const key = event.key.toUpperCase()
   if (MOVE_KEYS[key]) this.stopMove(MOVE_KEYS[key])
 }
@@ -207,11 +212,26 @@ function placeBomb (this:Player, state:GameState) {
   }))
 }
 
+function kill (this:Player) {
+  if (this.removeTime) return
+  this.removeTime = Date.now() + 350
+  this.tick = () => {
+    if (Date.now() > this.removeTime) {
+      this.tick = () => {}
+      this.render = () => {}
+    }
+  }
+  this.render = (context:CanvasRenderingContext2D) => {
+    const { sx, sy } = animate(this, PLAYER_K)
+    context.drawImage(this.sprite, sx, sy, PLAYER_K.FRAME_WIDTH, PLAYER_K.FRAME_HEIGHT, this.x, this.y, PLAYER_K.FRAME_WIDTH, PLAYER_K.FRAME_HEIGHT)
+  }
+}
+
 function tick (this:Player) {
   this.moveTick()
 }
 
-function render (this : Player, context : CanvasRenderingContext2D) {
+function render (this:Player, context:CanvasRenderingContext2D) {
   if (this.side === 'D') {
     if (this.holding) {
       if (this.moving) {
