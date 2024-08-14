@@ -99,9 +99,9 @@ export default function Canvas () {
     socket.off('myself', setMyself)
     socket.off('start_game', startGame)
     state.players.setMyself(myself)
-    state.players.myself?.addKeyboardListener(state)
+    state.players.myself?.addInputListener(state)
     return () => {
-      state.players.myself?.removeKeyboardListener(state)
+      state.players.myself?.removeInputListener(state)
     }
   }, [myself, state])
 

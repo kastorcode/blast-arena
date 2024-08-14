@@ -13,5 +13,8 @@ module.exports = {
       webpackConfig.resolve.plugins.splice(scopePluginIndex, 1)
       return webpackConfig
     }
+  },
+  devServer: {
+    https: true
   }
 }

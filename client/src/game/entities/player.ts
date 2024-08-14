@@ -3,6 +3,7 @@ import { KillDTO, MoveDTO, PlaceBombDTO, PlayerDTO, SIDES } from '#/dto'
 import { animate, AnimControl } from '~/game/animations/animation'
 import { PLAYER_D, PLAYER_DH, PLAYER_K, PLAYER_L, PLAYER_LH, PLAYER_R, PLAYER_RH, PLAYER_U, PLAYER_UH } from '~/game/animations/player'
 import { BombFactory } from '~/game/entities/bomb'
+import { GamepadFactory } from '~/game/entities/gamepad'
 import { GameState } from '~/game/entities/state'
 import socket from '~/services/socket'
 
@@ -28,19 +29,19 @@ export interface Player {
   speed      : number
   x          : number
   y          : number
-  setMyself              : () => void
-  getAxes                : () => [number, number]
-  addKeyboardListener    : (state:GameState) => void
-  removeKeyboardListener : (state:GameState) => void
-  startMove              : (side:SIDES) => void
-  moveTick               : () => void
-  moves                  : {[key in SIDES] : () => void}
-  onMove                 : (dto:MoveDTO) => void
-  stopMove               : (side:SIDES) => void
-  placeBomb              : (state:GameState) => void
-  kill                   : (emit:boolean) => void
-  tick                   : () => void
-  render                 : (context:CanvasRenderingContext2D) => void
+  setMyself           : () => void
+  getAxes             : () => [number, number]
+  addInputListener    : (state:GameState) => void
+  removeInputListener : (state:GameState) => void
+  startMove           : (side:SIDES) => void
+  moveTick            : () => void
+  moves               : {[key in SIDES] : () => void}
+  onMove              : (dto:MoveDTO) => void
+  stopMove            : (side:SIDES) => void
+  placeBomb           : (state:GameState) => void
+  kill                : (emit:boolean) => void
+  tick                : () => void
+  render              : (context:CanvasRenderingContext2D) => void
 }
 
 const BOMB_KEYS : {[key:string]:'B'} = {
@@ -84,8 +85,8 @@ export function PlayerFactory (props : PlayerProps) : Player {
   player.sprite.src = `/sprites/chars/${props.sprite}.png`
   player.setMyself = setMyself.bind(player)
   player.getAxes = getAxes.bind(player)
-  player.addKeyboardListener = addKeyboardListener.bind(player)
-  player.removeKeyboardListener = removeKeyboardListener.bind(player)
+  player.addInputListener = addInputListener.bind(player)
+  player.removeInputListener = removeInputListener.bind(player)
   player.startMove = startMove.bind(player)
   player.moveTick = moveTick.bind(player)
   player.moves = { D: moveDown.bind(player), L: moveLeft.bind(player), R: moveRight.bind(player), U: moveUp.bind(player) }
@@ -108,14 +109,18 @@ function getAxes (this : Player) : [number, number] {
   return [x, y]
 }
 
-function addKeyboardListener (this:Player, state:GameState) {
+function addInputListener (this:Player, state:GameState) {
   document.addEventListener('keydown', event => keydownListener.call(this, event, state))
   document.addEventListener('keyup', keyupListener.bind(this))
+  window.addEventListener('gamepaddisconnected', () => removeGamepadSupport.call(this, state))
+  window.addEventListener('gamepadconnected', () => addGamepadSupport.call(this, state))
 }
 
-function removeKeyboardListener (this:Player, state:GameState) {
+function removeInputListener (this:Player, state:GameState) {
   document.removeEventListener('keydown', event => keydownListener.call(this, event, state))
   document.removeEventListener('keyup', keyupListener.bind(this))
+  window.removeEventListener('gamepaddisconnected', () => removeGamepadSupport.call(this, state))
+  window.removeEventListener('gamepadconnected', () => addGamepadSupport.call(this, state))
 }
 
 function keydownListener (this:Player, event:KeyboardEvent, state:GameState) {
@@ -131,6 +136,18 @@ function keyupListener (this : Player, event : KeyboardEvent) {
   if (this.removeTime) return
   const key = event.key.toUpperCase()
   if (MOVE_KEYS[key]) this.stopMove(MOVE_KEYS[key])
+}
+
+function addGamepadSupport (this:Player, state:GameState) {
+  const id = `G${this.index}`
+  if (state.entities.has(id)) return
+  state.entities.add(GamepadFactory({id, index:0, player:this}))
+}
+
+function removeGamepadSupport (this:Player, state:GameState) {
+  const gamepad = state.entities.get(`G${this.index}`)
+  if (!gamepad) return
+  state.entities.remove(gamepad)
 }
 
 function startMove (this : Player, side : SIDES) {
@@ -187,7 +204,7 @@ function onMove (this : Player, dto : MoveDTO) {
   this.y = dto.y
 }
 
-function stopMove (this : Player, side : SIDES) {
+function stopMove (this:Player, side:SIDES) {
   MOVING[side] = false
   this.moving = 0
   for (const side in MOVING) {

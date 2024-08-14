@@ -1,14 +1,14 @@
 import '~/global'
 import cors from 'cors'
 import express from 'express'
-import http from 'http'
+import https from 'https'
 import { Server } from 'socket.io'
-import { CORS, PORT } from '~/constants'
+import { CORS, getSsl, PORT } from '~/constants'
 import ioListener from '~/ioListener'
 import router from '~/router'
 
 const app = express()
-const server = http.createServer(app)
+const server = https.createServer(getSsl(), app)
 const io = new Server(server, { cors: CORS })
 
 app.use(cors(CORS))

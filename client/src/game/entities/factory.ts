@@ -2,16 +2,18 @@ import { GameState } from '~/game/entities/state'
 
 interface Entity {
   id     : string
-  tick   : (state : GameState) => void
-  render : (context : CanvasRenderingContext2D) => void
+  tick   : (state:GameState) => void
+  render : (context:CanvasRenderingContext2D) => void
 }
 
 export interface Entities {
   entities : Map<string,Entity>
-  add      : (entity : Entity) => void
-  remove   : (entity : Entity) => void
-  tick     : (state : GameState) => void
-  render   : (context : CanvasRenderingContext2D) => void
+  add      : (entity:Entity) => void
+  get      : (id:string) => Entity|undefined
+  has      : (id:string) => boolean
+  remove   : (entity:Entity) => void
+  tick     : (state:GameState) => void
+  render   : (context:CanvasRenderingContext2D) => void
 }
 
 export function EntitiesFactory () : Entities {
@@ -19,6 +21,8 @@ export function EntitiesFactory () : Entities {
     entities: new Map()
   } as Entities
   entities.add = add.bind(entities)
+  entities.get = get.bind(entities)
+  entities.has = has.bind(entities)
   entities.remove = remove.bind(entities)
   entities.tick = tick.bind(entities)
   entities.render = render.bind(entities)
@@ -27,6 +31,14 @@ export function EntitiesFactory () : Entities {
 
 function add (this:Entities, entity:Entity) {
   this.entities.set(entity.id, entity)
+}
+
+function get (this:Entities, id:string) {
+  return this.entities.get(id)
+}
+
+function has (this:Entities, id:string) {
+  return this.entities.has(id)
 }
 
 function remove (this:Entities, entity:Entity) {
