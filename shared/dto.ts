@@ -16,6 +16,10 @@ export interface GameStateDTO {
   stage     : number
 }
 
+export interface KillDTO {
+  i : number // player index
+}
+
 export interface LobbyDTO {
   lobbyId : string
   players : UserDTO[]
@@ -28,6 +32,14 @@ export interface MoveDTO {
   s : SIDES   // player side
   x : number  // player x position
   y : number  // player y position
+}
+
+export interface PlaceBombDTO {
+  a : [number, number] // bomb axes
+  i : number           // player index
+  r : number           // bomb reach
+  x : number           // bomb x position
+  y : number           // bomb y position
 }
 
 export interface PlayerDTO extends UserDTO {

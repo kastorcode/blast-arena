@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
-import { MoveDTO, StartGameDTO } from '#/dto'
+import { KillDTO, MoveDTO, PlaceBombDTO, StartGameDTO } from '#/dto'
 import { BlocksFactory } from '~/game/entities/block'
+import { BombFactory } from '~/game/entities/bomb'
 import { EntitiesFactory } from '~/game/entities/factory'
 import { Player } from '~/game/entities/player'
 import { PlayersFactory } from '~/game/entities/players'
@@ -61,14 +62,35 @@ export default function Canvas () {
     state?.players.players[dto.i].onMove(dto)
   }
 
+  function onPlaceBomb (dto : PlaceBombDTO) {
+    if (dto.i === myself) return
+    state?.entities.add(BombFactory({
+      state,
+      axes: dto.a,
+      playerIndex: dto.i,
+      reach: dto.r,
+      x: dto.x,
+      y: dto.y
+    }))
+  }
+
+  function onKill (dto : KillDTO) {
+    if (dto.i === myself) return
+    state?.players.players[dto.i].kill(false)
+  }
+
   useEffect(() => {
     socket.on('myself', setMyself)
     socket.on('start_game', startGame)
     socket.on('mv', onMove)
+    socket.on('pb', onPlaceBomb)
+    socket.on('kl', onKill)
     return () => {
       socket.off('myself', setMyself)
       socket.off('start_game', startGame)
       socket.off('mv', onMove)
+      socket.off('pb', onPlaceBomb)
+      socket.off('kl', onKill)
     }
   }, [state])
 

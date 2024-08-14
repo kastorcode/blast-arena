@@ -4,6 +4,7 @@ import { BOMB } from '~/game/animations/bomb'
 import { Blast, BlastFactory, Directions } from '~/game/entities/blast'
 import { Player } from '~/game/entities/player'
 import { GameState } from '~/game/entities/state'
+import { isColliding, stopPlayer } from '~/game/util/collision'
 
 interface BombProps {
   axes       ?: [number, number]
@@ -20,6 +21,7 @@ interface Bomb {
   armed        : boolean
   axes         : [number, number]
   blast        : Blast
+  collidable   : boolean
   detonated    : boolean
   detonateTime : number
   directions   : Directions
@@ -31,7 +33,6 @@ interface Bomb {
   sprite       : HTMLImageElement
   x            : number
   y            : number
-  setId                : (id:number) => void
   detonate             : (state:GameState) => void
   checkPlayerCollision : (state:GameState) => void
   tick                 : (state:GameState) => void
@@ -52,9 +53,9 @@ export function BombFactory (props : BombProps) : Bomb {
   bomb.armed = true
   bomb.detonated = false
   bomb.blast = BlastFactory(props.state)
+  bomb.collidable = false
   bomb.directions = {up:0, right:0, down:0, left:0}
-  bomb.id = 'B'
-  bomb.setId = setId.bind(bomb)
+  bomb.id = `B${Math.floor(Math.random() * 9999999)}`
   bomb.detonate = detonate.bind(bomb)
   bomb.checkPlayerCollision = checkPlayerCollision.bind(bomb)
   bomb.tick = tick.bind(bomb)
@@ -62,10 +63,6 @@ export function BombFactory (props : BombProps) : Bomb {
   bomb.detonateTime = Date.now() + 3000
   bomb.removeTime = bomb.detonateTime + 1500
   return bomb
-}
-
-function setId (this:Bomb, id:number) {
-  this.id += id
 }
 
 function detonate (this:Bomb, state:GameState) {
@@ -113,25 +110,25 @@ function checkPlayerCollision (this:Bomb, state:GameState) {
   const [x, y] = state.players.myself?.getAxes() as [number, number]
   for (let i = this.directions.up - 1; i > -1; i--) {
     if (x === this.axes[0] - i && y === this.axes[1]) {
-      state.players.myself?.kill()
+      state.players.myself?.kill(true)
       return
     }
   }
   for (let i = this.directions.down - 1; i > -1; i--) {
     if (x === this.axes[0] + i && y === this.axes[1]) {
-      state.players.myself?.kill()
+      state.players.myself?.kill(true)
       return
     }
   }
   for (let i = this.directions.left - 1; i > -1; i--) {
     if (x === this.axes[0] && y === this.axes[1] - i) {
-      state.players.myself?.kill()
+      state.players.myself?.kill(true)
       return
     }
   }
   for (let i = this.directions.right - 1; i > -1; i--) {
     if (x === this.axes[0] && y === this.axes[1] + i) {
-      state.players.myself?.kill()
+      state.players.myself?.kill(true)
       return
     }
   }
@@ -144,9 +141,19 @@ function tick (this:Bomb, state:GameState) {
   if (Date.now() > this.removeTime) {
     state.entities.remove(this)
   }
-  else if (this.armed && Date.now() > this.detonateTime) {
-    if (this.player) this.player.bombs++
-    this.detonate(state)
+  else if (this.armed) {
+    if (this.collidable) {
+      if (isColliding(state.players.myself as Player, this)) {
+        stopPlayer(state.players.myself as Player, this)
+      }
+    }
+    else if (!isColliding(state.players.myself as Player, this)) {
+      this.collidable = true
+    }
+    if (Date.now() > this.detonateTime) {
+      if (this.player) this.player.bombs++
+      this.detonate(state)
+    }
   }
 }
 

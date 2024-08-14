@@ -1,8 +1,7 @@
-import { GameState } from './state'
+import { GameState } from '~/game/entities/state'
 
 interface Entity {
   id     : string
-  setId  : (id : number) => void
   tick   : (state : GameState) => void
   render : (context : CanvasRenderingContext2D) => void
 }
@@ -26,12 +25,11 @@ export function EntitiesFactory () : Entities {
   return entities
 }
 
-function add (this : Entities, entity : Entity) {
-  entity.setId(Math.floor(Math.random() * 9999999))
+function add (this:Entities, entity:Entity) {
   this.entities.set(entity.id, entity)
 }
 
-function remove (this : Entities, entity : Entity) {
+function remove (this:Entities, entity:Entity) {
   this.entities.delete(entity.id)
 }
 

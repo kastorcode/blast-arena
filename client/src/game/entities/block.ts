@@ -1,18 +1,16 @@
 import { TILE_SIZE } from '#/constants'
-import { BlockDTO, SIDES } from '#/dto'
+import { BlockDTO } from '#/dto'
 import { animate, AnimControl } from '~/game/animations/animation'
 import { BLOCK } from '~/game/animations/block'
+import { Player } from '~/game/entities/player'
 import { GameState } from '~/game/entities/state'
-import { isColliding } from '~/game/util/collision'
-import { Player } from './player'
-import TILE_IMG from '../components/tileImg'
+import { isColliding, stopPlayer } from '~/game/util/collision'
 
 interface Block extends BlockDTO {
   anim        : AnimControl['anim']
   axes        : [number, number]
   destroying  : boolean
   destroyTime : number
-  sides       : {[key in SIDES] : (p:Player) => void}
   destroy : () => void
   tick    : (player:Player) => boolean
   render  : (context:CanvasRenderingContext2D, state:GameState) => void
@@ -43,12 +41,6 @@ export function BlocksFactory (blocksDto : (BlockDTO|null)[][]) : Blocks {
       block.tick = tickI.bind(block)
       block.render = () => {}
     }
-    block.sides = {
-      U: collidedDown.bind(block),
-      D: collidedUp.bind(block),
-      L: collidedRight.bind(block),
-      R: collidedLeft.bind(block)
-    }
     return block
   }))
   const getBlock = getOneBlock.bind(blocks)
@@ -56,22 +48,6 @@ export function BlocksFactory (blocksDto : (BlockDTO|null)[][]) : Blocks {
   const tick = tickPlayer.bind(blocks)
   const render = renderBlocks.bind(blocks)
   return { blocks, getBlock, destroyBlock, tick, render }
-}
-
-function collidedUp (this:Block, p:Player) {
-  p.y = this.y - 23
-}
-
-function collidedDown (this:Block, p:Player) {
-  p.y = this.y + 9
-}
-
-function collidedLeft (this:Block, p:Player) {
-  p.x = this.x - 15
-}
-
-function collidedRight (this:Block, p:Player) {
-  p.x = this.x + 17
 }
 
 function getOneBlock (this:Blocks['blocks'], x:number, y:number) : Block|null {
@@ -90,10 +66,7 @@ function nullifyBlock (this:Blocks['blocks'], axes:[number, number]) {
 
 function tickD (this:Block, player:Player) : boolean {
   const colliding = isColliding(player, this)
-  if (colliding) {
-    player.moving = 0
-    this.sides[player.side](player)
-  }
+  if (colliding) stopPlayer(player, this)
   return colliding
 }
 

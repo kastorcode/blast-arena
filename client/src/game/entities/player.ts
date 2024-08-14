@@ -1,5 +1,5 @@
 import { TILE_SIZE } from '#/constants'
-import { MoveDTO, PlayerDTO, SIDES } from '#/dto'
+import { KillDTO, MoveDTO, PlaceBombDTO, PlayerDTO, SIDES } from '#/dto'
 import { animate, AnimControl } from '~/game/animations/animation'
 import { PLAYER_D, PLAYER_DH, PLAYER_K, PLAYER_L, PLAYER_LH, PLAYER_R, PLAYER_RH, PLAYER_U, PLAYER_UH } from '~/game/animations/player'
 import { BombFactory } from '~/game/entities/bomb'
@@ -38,7 +38,7 @@ export interface Player {
   onMove                 : (dto:MoveDTO) => void
   stopMove               : (side:SIDES) => void
   placeBomb              : (state:GameState) => void
-  kill                   : () => void
+  kill                   : (emit:boolean) => void
   tick                   : () => void
   render                 : (context:CanvasRenderingContext2D) => void
 }
@@ -204,15 +204,24 @@ function stopMove (this : Player, side : SIDES) {
 function placeBomb (this:Player, state:GameState) {
   if (!this.bombs) return
   this.bombs--
-  state.entities.add(BombFactory({
+  const bomb = BombFactory({
     player     : this,
     playerIndex: this.index,
     reach      : this.bombReach,
     state
-  }))
+  })
+  const dto:PlaceBombDTO = {
+    a: bomb.axes,
+    i: bomb.playerIndex,
+    r: bomb.reach,
+    x: bomb.x,
+    y: bomb.y
+  }
+  socket.emit('pb', dto)
+  state.entities.add(bomb)
 }
 
-function kill (this:Player) {
+function kill (this:Player, emit:boolean) {
   if (this.removeTime) return
   this.removeTime = Date.now() + 350
   this.tick = () => {
@@ -225,6 +234,9 @@ function kill (this:Player) {
     const { sx, sy } = animate(this, PLAYER_K)
     context.drawImage(this.sprite, sx, sy, PLAYER_K.FRAME_WIDTH, PLAYER_K.FRAME_HEIGHT, this.x, this.y, PLAYER_K.FRAME_WIDTH, PLAYER_K.FRAME_HEIGHT)
   }
+  if (!emit) return
+  const dto:KillDTO = {i:this.index}
+  socket.emit('kl', dto)
 }
 
 function tick (this:Player) {
