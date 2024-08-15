@@ -1,5 +1,5 @@
 import { Server } from 'socket.io'
-import { BLASTS, BOMBS, INITIAL_POSITION, SPEED, SPRITES, STAGES } from '#/constants'
+import { BLASTS, BOMBS, BONUS, SPRITES, STAGES } from '#/constants'
 import { BlockDTO, GameStateDTO, LobbyDTO, StartGameDTO } from '#/dto'
 import { Socket } from '~/extends'
 import { states } from '~/states'
@@ -44,6 +44,14 @@ export function updateLobbyFactory (io : Server, lobbyId : string) : LobbyDTO|nu
   return null
 }
 
+function stateFactory () : GameStateDTO {
+  const blocks = bonusFactory(blocksFactory())
+  const blast = Math.floor(Math.random() * BLASTS)
+  const bomb = Math.floor(Math.random() * BOMBS)
+  const stage = Math.floor(Math.random() * STAGES)
+  return {blast, blocks, bomb, stage}
+}
+
 function blocksFactory () : (BlockDTO|null)[][] {
   const removal = [3,2,3,2,3,2,3,2,3,2,3]
   const blocks:(BlockDTO|null)[][] = [
@@ -72,14 +80,17 @@ function blocksFactory () : (BlockDTO|null)[][] {
   return blocks
 }
 
-function stateFactory () : GameStateDTO {
-  const blocks = blocksFactory()
-  const blast = Math.floor(Math.random() * BLASTS)
-  const bomb = Math.floor(Math.random() * BOMBS)
-  const stage = Math.floor(Math.random() * STAGES)
-  return {
-    blast, blocks, bomb, stage,
-    positions: INITIAL_POSITION,
-    speed: SPEED
+function bonusFactory (blocks:(BlockDTO|null)[][]) : (BlockDTO|null)[][] {
+  const positions:number[][] = []
+  blocks.forEach((row,i) => row.forEach((block,j) => {
+    if (block && block.t === 'D') positions.push([i, j])
+  }))
+  for (let bonus = 1; bonus < BONUS.length; bonus++) {
+    for (let quantity = BONUS[bonus]; quantity > 0; quantity--) {
+      const where = Math.floor(Math.random() * positions.length)
+      blocks[positions[where][0]][positions[where][1]]!.b = bonus
+      positions.splice(where, 1)
+    }
   }
+  return blocks
 }

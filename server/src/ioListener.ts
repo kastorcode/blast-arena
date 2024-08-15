@@ -1,5 +1,5 @@
 import { Server } from 'socket.io'
-import { onKill, onMove, onPlaceBomb } from '~/game'
+import { onKill, onMove, onNullifyBlock, onPlaceBomb } from '~/game'
 import { setUser, createLobby, changeLobby, joinRoom, onDisconnect } from '~/manager'
 
 export default function ioListener (io : Server) {
@@ -23,6 +23,7 @@ export default function ioListener (io : Server) {
 
     socket.on('mv', dto => onMove(io, socket, dto))
     socket.on('pb', dto => onPlaceBomb(io, socket, dto))
+    socket.on('nb', dto => onNullifyBlock(io, socket, dto))
     socket.on('kl', dto => onKill(io, socket, dto))
 
   })

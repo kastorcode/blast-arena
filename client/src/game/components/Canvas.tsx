@@ -1,9 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
-import { KillDTO, MoveDTO, PlaceBombDTO, StartGameDTO } from '#/dto'
+import { KillDTO, MoveDTO, NullifyBlockDTO, PlaceBombDTO, StartGameDTO } from '#/dto'
 import { BlocksFactory } from '~/game/entities/block'
 import { BombFactory } from '~/game/entities/bomb'
 import { EntitiesFactory } from '~/game/entities/factory'
-import { Player } from '~/game/entities/player'
 import { PlayersFactory } from '~/game/entities/players'
 import { StageFactory } from '~/game/entities/stage'
 import { GameState } from '~/game/entities/state'
@@ -34,7 +33,7 @@ export default function Canvas () {
   function tick () {
     state?.entities.tick(state)
     state?.players.tick()
-    state?.blocks.tick(state.players.myself as Player)
+    state?.blocks.tick(state)
   }
 
   function render () {
@@ -46,7 +45,7 @@ export default function Canvas () {
     state?.players.render(context as CanvasRenderingContext2D)
   }
 
-  function startGame (dto : StartGameDTO) {
+  function startGame (dto:StartGameDTO) {
     socket.off('start_game', startGame)
     setState({
       ...dto.state,
@@ -57,12 +56,12 @@ export default function Canvas () {
     })
   }
 
-  function onMove (dto : MoveDTO) {
+  function onMove (dto:MoveDTO) {
     if (dto.i === myself) return
     state?.players.players[dto.i].onMove(dto)
   }
 
-  function onPlaceBomb (dto : PlaceBombDTO) {
+  function onPlaceBomb (dto:PlaceBombDTO) {
     if (dto.i === myself) return
     state?.entities.add(BombFactory({
       state,
@@ -74,7 +73,11 @@ export default function Canvas () {
     }))
   }
 
-  function onKill (dto : KillDTO) {
+  function onNullifyBlock (dto:NullifyBlockDTO) {
+    state?.blocks.destroyBlock(dto.a, state)
+  }
+
+  function onKill (dto:KillDTO) {
     if (dto.i === myself) return
     state?.players.players[dto.i].kill(false)
   }
@@ -84,12 +87,14 @@ export default function Canvas () {
     socket.on('start_game', startGame)
     socket.on('mv', onMove)
     socket.on('pb', onPlaceBomb)
+    socket.on('nb', onNullifyBlock)
     socket.on('kl', onKill)
     return () => {
       socket.off('myself', setMyself)
       socket.off('start_game', startGame)
       socket.off('mv', onMove)
       socket.off('pb', onPlaceBomb)
+      socket.off('nb', onNullifyBlock)
       socket.off('kl', onKill)
     }
   }, [state])

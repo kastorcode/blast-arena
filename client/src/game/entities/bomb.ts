@@ -70,38 +70,58 @@ function detonate (this:Bomb, state:GameState) {
   this.detonated = true
   for (let i = this.axes[0]; i > -1; i--) {
     if (this.directions.up === this.reach) break
-    const b = state.blocks.getBlock(i, this.axes[1])
+    const b = state.blocks.getBlock([i, this.axes[1]])
     if (!b) this.directions.up++
-    else {
+    else if (b.t === 'D') {
       b.destroy()
       break
+    }
+    else if (b.t === 'I') break
+    else {
+      this.directions.up++
+      state.blocks.destroyBlock([i, this.axes[1]], state)
     }
   }
   for (let i = this.axes[1]; i < 13; i++) {
     if (this.directions.right === this.reach) break
-    const b = state.blocks.getBlock(this.axes[0], i)
+    const b = state.blocks.getBlock([this.axes[0], i])
     if (!b) this.directions.right++
-    else {
+    else if (b.t === 'D') {
       b.destroy()
       break
+    }
+    else if (b.t === 'I') break
+    else {
+      this.directions.right++
+      state.blocks.destroyBlock([this.axes[0], i], state)
     }
   }
   for (let i = this.axes[0]; i < 11; i++) {
     if (this.directions.down === this.reach) break
-    const b = state.blocks.getBlock(i, this.axes[1])
+    const b = state.blocks.getBlock([i, this.axes[1]])
     if (!b) this.directions.down++
-    else {
+    else if (b.t === 'D') {
       b.destroy()
       break
+    }
+    else if (b.t === 'I') break
+    else {
+      this.directions.down++
+      state.blocks.destroyBlock([i, this.axes[1]], state)
     }
   }
   for (let i = this.axes[1]; i > -1; i--) {
     if (this.directions.left === this.reach) break
-    const b = state.blocks.getBlock(this.axes[0], i)
+    const b = state.blocks.getBlock([this.axes[0], i])
     if (!b) this.directions.left++
-    else {
+    else if (b.t === 'D') {
       b.destroy()
       break
+    }
+    else if (b.t === 'I') break
+    else {
+      this.directions.left++
+      state.blocks.destroyBlock([this.axes[0], i], state)
     }
   }
 }

@@ -11,8 +11,6 @@ export interface GameStateDTO {
   blast     : number
   blocks    : (BlockDTO|null)[][]
   bomb      : number
-  positions : number[][]
-  speed     : number
   stage     : number
 }
 
@@ -32,6 +30,10 @@ export interface MoveDTO {
   s : SIDES   // player side
   x : number  // player x position
   y : number  // player y position
+}
+
+export interface NullifyBlockDTO {
+  a : [number, number] // block axes
 }
 
 export interface PlaceBombDTO {

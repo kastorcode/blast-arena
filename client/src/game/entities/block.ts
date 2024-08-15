@@ -2,7 +2,7 @@ import { TILE_SIZE } from '#/constants'
 import { BlockDTO } from '#/dto'
 import { animate, AnimControl } from '~/game/animations/animation'
 import { BLOCK } from '~/game/animations/block'
-import { Player } from '~/game/entities/player'
+import { Bonus, BonusFactory } from '~/game/entities/bonus'
 import { GameState } from '~/game/entities/state'
 import { isColliding, stopPlayer } from '~/game/util/collision'
 
@@ -12,15 +12,15 @@ interface Block extends BlockDTO {
   destroying  : boolean
   destroyTime : number
   destroy : () => void
-  tick    : (player:Player) => boolean
+  tick    : (state:GameState) => boolean
   render  : (context:CanvasRenderingContext2D, state:GameState) => void
 }
 
 export interface Blocks {
-  blocks : (Block|null)[][]
-  getBlock     : (x:number, y:number) => Block|null
-  destroyBlock : (axes:[number, number]) => void
-  tick         : (player:Player) => void
+  blocks : (Block|Bonus|null)[][]
+  getBlock     : (axes:[number,number]) => Block|Bonus|null
+  destroyBlock : (axes:[number,number], state:GameState) => void
+  tick         : (state:GameState) => void
   render       : (context:CanvasRenderingContext2D, state:GameState) => void
 }
 
@@ -50,8 +50,8 @@ export function BlocksFactory (blocksDto : (BlockDTO|null)[][]) : Blocks {
   return { blocks, getBlock, destroyBlock, tick, render }
 }
 
-function getOneBlock (this:Blocks['blocks'], x:number, y:number) : Block|null {
-  return this[x][y]
+function getOneBlock (this:Blocks['blocks'], axes:[number,number]) : Block|Bonus|null {
+  return this[axes[0]][axes[1]]
 }
 
 function startDestroyBlock (this:Block) {
@@ -60,20 +60,29 @@ function startDestroyBlock (this:Block) {
   this.tick = () => false
 }
 
-function nullifyBlock (this:Blocks['blocks'], axes:[number, number]) {
-  this[axes[0]][axes[1]] = null
+function nullifyBlock (this:Blocks['blocks'], axes:[number,number], state:GameState) {
+  const block = this[axes[0]][axes[1]]
+  if (block && (block as Block).b) {
+    this[axes[0]][axes[1]] = BonusFactory({
+      axes, bonus:(block as Block).b!, state, x:block.x, y:block.y
+    })
+  }
+  else {
+    this[axes[0]][axes[1]] = null
+  }
 }
 
-function tickD (this:Block, player:Player) : boolean {
-  const colliding = isColliding(player, this)
-  if (colliding) stopPlayer(player, this)
+function tickD (this:Block, state:GameState) : boolean {
+  const colliding = isColliding(state.players.myself!, this)
+  if (colliding) stopPlayer(state.players.myself!, this)
   return colliding
 }
 
-function tickI (this:Block, p:Player) : boolean {
+function tickI (this:Block, state:GameState) : boolean {
   const TOLERANCE = 7
-  const colliding = isColliding(p, this)
+  const colliding = isColliding(state.players.myself!, this)
   if (colliding) {
+    const p = state.players.myself!
     if (p.x + 15 > this.x && p.side === 'R') {
       p.x = this.x - 15
       if (p.y + 23 - this.y <= TOLERANCE) {
@@ -126,34 +135,34 @@ function tickI (this:Block, p:Player) : boolean {
   return colliding
 }
 
-function tickPlayer (this:Blocks['blocks'], player:Player) {
-  const [x, y] = player.getAxes()
+function tickPlayer (this:Blocks['blocks'], state:GameState) {
+  const [x, y] = state.players.myself!.getAxes()
   let i = x - 1
   let j = y
   if (i < 0) i = 0
-  this[i][j] && this[i][j]?.tick(player)
+  this[i][j] && this[i][j]?.tick(state)
   j = y + 1
-  this[i][j] && this[i][j]?.tick(player)
+  this[i][j] && this[i][j]?.tick(state)
   i = x
-  this[i][j] && this[i][j]?.tick(player)
+  this[i][j] && this[i][j]?.tick(state)
   i = x + 1
   if (i > 10) i = 10
-  this[i][j] && this[i][j]?.tick(player)
+  this[i][j] && this[i][j]?.tick(state)
   j = y
-  this[i][j] && this[i][j]?.tick(player)
+  this[i][j] && this[i][j]?.tick(state)
   j = y - 1
-  this[i][j] && this[i][j]?.tick(player)
+  this[i][j] && this[i][j]?.tick(state)
   i = x
-  this[i][j] && this[i][j]?.tick(player)
+  this[i][j] && this[i][j]?.tick(state)
   i = x - 1
   if (i < 0) i = 0
-  this[i][j] && this[i][j]?.tick(player)
+  this[i][j] && this[i][j]?.tick(state)
 }
 
 function renderAndDestroy (this:Block, context:CanvasRenderingContext2D, state:GameState) {
   if (this.destroying) {
     if (Date.now() > this.destroyTime) {
-      state.blocks.destroyBlock(this.axes)
+      state.blocks.destroyBlock(this.axes, state)
     }
     else {
       const { sx, sy } = animate(this, BLOCK)
