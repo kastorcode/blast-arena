@@ -11,13 +11,15 @@ export const BONUSES = [
   2,  // holding
   2,  // kick
   8,  // speed
-  1,  // slow
-  1,  // pass
-  1,  // invert
-  1   // kill
+  2,  // slow
+  2,  // pass
+  2,  // invert
+  2   // kill
 ]
 
 export const INITIAL_POSITION = [[17,9], [209,9], [17,169], [209,169]]
+
+export const MAX_SPEED = 1.4
 
 export const SPEED = 1
 

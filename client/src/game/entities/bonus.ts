@@ -1,4 +1,4 @@
-import { TILE_SIZE } from '#/constants'
+import { MAX_SPEED, SPEED, TILE_SIZE } from '#/constants'
 import { NullifyBlockDTO } from '#/dto'
 import { GameState } from '~/game/entities/state'
 import { isColliding } from '~/game/util/collision'
@@ -28,11 +28,11 @@ const BONUS:{[key:number]:(props:BonusProps) => Bonus} = {
   2:BlastBonus,
   3:BlastBonus,
   4:BlastBonus,
-  5:BlastBonus,
-  6:BombBonus,
-  7:BombBonus,
-  8:BombBonus,
-  9:BombBonus
+  5:SpeedBonus,
+  6:SlowBonus,
+  7:KillBonus,
+  8:KillBonus,
+  9:KillBonus
 }
 
 export function BonusFactory (props:BonusProps) : Bonus {
@@ -79,6 +79,69 @@ function BlastBonus (props:BonusProps) : Bonus {
   }
   blast.sprite.src = `/sprites/bonus/${props.state.bonus}.png`
   return blast
+}
+
+function SpeedBonus (props:BonusProps) : Bonus {
+  const speed:Bonus = {
+    axes  : props.axes,
+    bonus : props.bonus,
+    sprite: new Image(),
+    t     : 'B',
+    x     : props.x,
+    y     : props.y,
+    tick: (state:GameState) => {
+      collided(state, speed, () => {
+        if (state.players.myself!.speed < MAX_SPEED) state.players.myself!.speed += 0.1
+      })
+    },
+    render: (context:CanvasRenderingContext2D) => {
+      context.drawImage(speed.sprite, 0, 48, TILE_SIZE, TILE_SIZE, speed.x, speed.y, TILE_SIZE, TILE_SIZE)
+    }
+  }
+  speed.sprite.src = `/sprites/bonus/${props.state.bonus}.png`
+  return speed
+}
+
+function SlowBonus (props:BonusProps) : Bonus {
+  const slow:Bonus = {
+    axes  : props.axes,
+    bonus : props.bonus,
+    sprite: new Image(),
+    t     : 'B',
+    x     : props.x,
+    y     : props.y,
+    tick: (state:GameState) => {
+      collided(state, slow, () => {
+        state.players.myself!.speed = SPEED - 0.1
+      })
+    },
+    render: (context:CanvasRenderingContext2D) => {
+      context.drawImage(slow.sprite, 0, 64, TILE_SIZE, TILE_SIZE, slow.x, slow.y, TILE_SIZE, TILE_SIZE)
+    }
+  }
+  slow.sprite.src = `/sprites/bonus/${props.state.bonus}.png`
+  return slow
+}
+
+function KillBonus (props:BonusProps) : Bonus {
+  const kill:Bonus = {
+    axes  : props.axes,
+    bonus : props.bonus,
+    sprite: new Image(),
+    t     : 'B',
+    x     : props.x,
+    y     : props.y,
+    tick: (state:GameState) => {
+      collided(state, kill, () => {
+        state.players.myself!.kill(true, state)
+      })
+    },
+    render: (context:CanvasRenderingContext2D) => {
+      context.drawImage(kill.sprite, 0, 112, TILE_SIZE, TILE_SIZE, kill.x, kill.y, TILE_SIZE, TILE_SIZE)
+    }
+  }
+  kill.sprite.src = `/sprites/bonus/${props.state.bonus}.png`
+  return kill
 }
 
 function collided (state:GameState, bonus:Bonus, callback:()=>void) {
