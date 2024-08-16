@@ -8,10 +8,11 @@ export interface BlockDTO {
 }
 
 export interface GameStateDTO {
-  blast     : number
-  blocks    : (BlockDTO|null)[][]
-  bomb      : number
-  stage     : number
+  blast  : number
+  blocks : (BlockDTO|null)[][]
+  bomb   : number
+  bonus  : number
+  stage  : number
 }
 
 export interface KillDTO {

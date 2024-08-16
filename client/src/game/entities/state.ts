@@ -7,6 +7,7 @@ export interface GameState {
   blast    : number
   blocks   : Blocks
   bomb     : number
+  bonus    : number
   entities : Entities
   players  : Players
   stage    : Stage

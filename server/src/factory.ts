@@ -1,5 +1,5 @@
 import { Server } from 'socket.io'
-import { BLASTS, BOMBS, BONUS, SPRITES, STAGES } from '#/constants'
+import { BLASTS, BOMBS, BONUS, BONUSES, SPRITES, STAGES } from '#/constants'
 import { BlockDTO, GameStateDTO, LobbyDTO, StartGameDTO } from '#/dto'
 import { Socket } from '~/extends'
 import { states } from '~/states'
@@ -48,8 +48,9 @@ function stateFactory () : GameStateDTO {
   const blocks = bonusFactory(blocksFactory())
   const blast = Math.floor(Math.random() * BLASTS)
   const bomb = Math.floor(Math.random() * BOMBS)
+  const bonus = Math.floor(Math.random() * BONUS)
   const stage = Math.floor(Math.random() * STAGES)
-  return {blast, blocks, bomb, stage}
+  return {blast, blocks, bomb, bonus, stage}
 }
 
 function blocksFactory () : (BlockDTO|null)[][] {
@@ -85,8 +86,8 @@ function bonusFactory (blocks:(BlockDTO|null)[][]) : (BlockDTO|null)[][] {
   blocks.forEach((row,i) => row.forEach((block,j) => {
     if (block && block.t === 'D') positions.push([i, j])
   }))
-  for (let bonus = 1; bonus < BONUS.length; bonus++) {
-    for (let quantity = BONUS[bonus]; quantity > 0; quantity--) {
+  for (let bonus = 1; bonus < BONUSES.length; bonus++) {
+    for (let quantity = BONUSES[bonus]; quantity > 0; quantity--) {
       const where = Math.floor(Math.random() * positions.length)
       blocks[positions[where][0]][positions[where][1]]!.b = bonus
       positions.splice(where, 1)

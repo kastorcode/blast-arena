@@ -35,13 +35,13 @@ export interface Player {
   removeInputListener  : (state:GameState) => void
   removeGamepadSupport : (state:GameState) => void
   startMove            : (side:SIDES) => void
-  moveTick             : () => void
+  moveTick             : (state:GameState) => void
   moves                : {[key in SIDES] : () => void}
   onMove               : (dto:MoveDTO) => void
   stopMove             : (side:SIDES) => void
   placeBomb            : (state:GameState) => void
   kill                 : (emit:boolean, state:GameState) => void
-  tick                 : () => void
+  tick                 : (state:GameState) => void
   render               : (context:CanvasRenderingContext2D) => void
 }
 
@@ -164,10 +164,11 @@ function startMove (this:Player, side:SIDES) {
   this.moving = 1
 }
 
-function moveTick (this:Player) {
+function moveTick (this:Player, state:GameState) {
   if (!this.moving) return
   this.moves[this.side]()
   if (!this.myself) return
+  state.blocks.tick(state)
   const dto:MoveDTO = {h:this.holding, i:this.index, m:this.moving, s:this.side, x:this.x, y:this.y}
   socket.emit('mv', dto)
 }
@@ -270,8 +271,8 @@ function kill (this:Player, emit:boolean, state:GameState) {
   socket.emit('kl', dto)
 }
 
-function tick (this:Player) {
-  this.moveTick()
+function tick (this:Player, state:GameState) {
+  this.moveTick(state)
 }
 
 function render (this:Player, context:CanvasRenderingContext2D) {
