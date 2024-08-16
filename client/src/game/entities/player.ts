@@ -29,19 +29,20 @@ export interface Player {
   speed      : number
   x          : number
   y          : number
-  setMyself           : () => void
-  getAxes             : () => [number, number]
-  addInputListener    : (state:GameState) => void
-  removeInputListener : (state:GameState) => void
-  startMove           : (side:SIDES) => void
-  moveTick            : () => void
-  moves               : {[key in SIDES] : () => void}
-  onMove              : (dto:MoveDTO) => void
-  stopMove            : (side:SIDES) => void
-  placeBomb           : (state:GameState) => void
-  kill                : (emit:boolean) => void
-  tick                : () => void
-  render              : (context:CanvasRenderingContext2D) => void
+  setMyself            : () => void
+  getAxes              : () => [number, number]
+  addInputListener     : (state:GameState) => void
+  removeInputListener  : (state:GameState) => void
+  removeGamepadSupport : (state:GameState) => void
+  startMove            : (side:SIDES) => void
+  moveTick             : () => void
+  moves                : {[key in SIDES] : () => void}
+  onMove               : (dto:MoveDTO) => void
+  stopMove             : (side:SIDES) => void
+  placeBomb            : (state:GameState) => void
+  kill                 : (emit:boolean, state:GameState) => void
+  tick                 : () => void
+  render               : (context:CanvasRenderingContext2D) => void
 }
 
 const BOMB_KEYS : {[key:string]:'B'} = {
@@ -66,7 +67,7 @@ const MOVING : {[key in SIDES]:boolean} = {
   U:false, L:false, D:false, R:false
 }
 
-export function PlayerFactory (props : PlayerProps) : Player {
+export function PlayerFactory (props:PlayerProps) : Player {
   const player : Player = {
     anim: {frameCurrent:0, lastRender:0, sum:true},
     bombReach: 2,
@@ -87,6 +88,7 @@ export function PlayerFactory (props : PlayerProps) : Player {
   player.getAxes = getAxes.bind(player)
   player.addInputListener = addInputListener.bind(player)
   player.removeInputListener = removeInputListener.bind(player)
+  player.removeGamepadSupport = removeGamepadSupport.bind(player)
   player.startMove = startMove.bind(player)
   player.moveTick = moveTick.bind(player)
   player.moves = { D: moveDown.bind(player), L: moveLeft.bind(player), R: moveRight.bind(player), U: moveUp.bind(player) }
@@ -99,17 +101,18 @@ export function PlayerFactory (props : PlayerProps) : Player {
   return player
 }
 
-function setMyself (this : Player) {
+function setMyself (this:Player) {
   this.myself = true
 }
 
-function getAxes (this : Player) : [number, number] {
+function getAxes (this:Player) : [number, number] {
   const x = Math.floor(this.y / TILE_SIZE)
   const y = Math.floor(((this.x - 1) / TILE_SIZE) - 0.5)
   return [x, y]
 }
 
 function addInputListener (this:Player, state:GameState) {
+  document.addEventListener('visibilitychange', () => onVisibilityChange.call(this, state))
   document.addEventListener('keydown', event => keydownListener.call(this, event, state))
   document.addEventListener('keyup', keyupListener.bind(this))
   window.addEventListener('gamepaddisconnected', () => removeGamepadSupport.call(this, state))
@@ -117,10 +120,15 @@ function addInputListener (this:Player, state:GameState) {
 }
 
 function removeInputListener (this:Player, state:GameState) {
+  document.removeEventListener('visibilitychange', () => onVisibilityChange.call(this, state))
   document.removeEventListener('keydown', event => keydownListener.call(this, event, state))
   document.removeEventListener('keyup', keyupListener.bind(this))
   window.removeEventListener('gamepaddisconnected', () => removeGamepadSupport.call(this, state))
   window.removeEventListener('gamepadconnected', () => addGamepadSupport.call(this, state))
+}
+
+function onVisibilityChange (this:Player, state:GameState) {
+  if (document.hidden) this.kill(true, state)
 }
 
 function keydownListener (this:Player, event:KeyboardEvent, state:GameState) {
@@ -131,7 +139,7 @@ function keydownListener (this:Player, event:KeyboardEvent, state:GameState) {
   if (BOMB_KEYS[key]) this.placeBomb(state)
 }
 
-function keyupListener (this : Player, event : KeyboardEvent) {
+function keyupListener (this:Player, event:KeyboardEvent) {
   event.preventDefault()
   if (this.removeTime) return
   const key = event.key.toUpperCase()
@@ -150,7 +158,7 @@ function removeGamepadSupport (this:Player, state:GameState) {
   state.entities.remove(gamepad)
 }
 
-function startMove (this : Player, side : SIDES) {
+function startMove (this:Player, side:SIDES) {
   MOVING[side] = true
   this.side = side
   this.moving = 1
@@ -160,11 +168,11 @@ function moveTick (this:Player) {
   if (!this.moving) return
   this.moves[this.side]()
   if (!this.myself) return
-  const dto:MoveDTO = { h:this.holding, i:this.index, m:this.moving, s:this.side, x:this.x, y:this.y }
+  const dto:MoveDTO = {h:this.holding, i:this.index, m:this.moving, s:this.side, x:this.x, y:this.y}
   socket.emit('mv', dto)
 }
 
-function moveDown (this : Player) {
+function moveDown (this:Player) {
   this.y += this.speed
   if (this.y > 169) {
     this.y = 169
@@ -172,7 +180,7 @@ function moveDown (this : Player) {
   }
 }
 
-function moveUp (this : Player) {
+function moveUp (this:Player) {
   this.y -= this.speed
   if (this.y < 9) {
     this.y = 9
@@ -180,7 +188,7 @@ function moveUp (this : Player) {
   }
 }
 
-function moveRight (this : Player) {
+function moveRight (this:Player) {
   this.x += this.speed
   if (this.x > 209) {
     this.x = 209
@@ -188,7 +196,7 @@ function moveRight (this : Player) {
   }
 }
 
-function moveLeft (this : Player) {
+function moveLeft (this:Player) {
   this.x -= this.speed
   if (this.x < 17) {
     this.x = 17
@@ -196,7 +204,7 @@ function moveLeft (this : Player) {
   }
 }
 
-function onMove (this : Player, dto : MoveDTO) {
+function onMove (this:Player, dto:MoveDTO) {
   this.holding = dto.h
   this.moving = dto.m
   this.side = dto.s
@@ -214,14 +222,19 @@ function stopMove (this:Player, side:SIDES) {
       break
     }
   }
-  const dto:MoveDTO = { h:this.holding, i:this.index, m:this.moving, s:this.side, x:this.x, y:this.y }
+  const dto:MoveDTO = {h:this.holding, i:this.index, m:this.moving, s:this.side, x:this.x, y:this.y}
   socket.emit('mv', dto)
 }
 
 function placeBomb (this:Player, state:GameState) {
   if (!this.bombs) return
+  const axes = this.getAxes()
+  const block = state.blocks.getBlock(axes)
+  if (block) return
   this.bombs--
+  state.blocks.occupyBlock(axes)
   const bomb = BombFactory({
+    axes,
     player     : this,
     playerIndex: this.index,
     reach      : this.bombReach,
@@ -238,7 +251,7 @@ function placeBomb (this:Player, state:GameState) {
   state.entities.add(bomb)
 }
 
-function kill (this:Player, emit:boolean) {
+function kill (this:Player, emit:boolean, state:GameState) {
   if (this.removeTime) return
   this.removeTime = Date.now() + 350
   this.tick = () => {
@@ -252,6 +265,7 @@ function kill (this:Player, emit:boolean) {
     context.drawImage(this.sprite, sx, sy, PLAYER_K.FRAME_WIDTH, PLAYER_K.FRAME_HEIGHT, this.x, this.y, PLAYER_K.FRAME_WIDTH, PLAYER_K.FRAME_HEIGHT)
   }
   if (!emit) return
+  this.removeGamepadSupport(state)
   const dto:KillDTO = {i:this.index}
   socket.emit('kl', dto)
 }

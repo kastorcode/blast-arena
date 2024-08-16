@@ -17,23 +17,28 @@ export default function Canvas () {
   const [state, setState] = useState<GameState>()
 
   function gameLoop (timestamp : number) {
-    const deltaTime = timestamp - fpsRef.current.lastTime
-    fpsRef.current.lastTime = timestamp
-    let fps = 1000 / deltaTime
-    if (fps > 58 && fps < 62) fps = 60
-    if (fps !== fpsRef.current.fps) {
-      fpsRef.current.fps = fps
-      console.log(`${fps} FPS`)
+    try {
+      const deltaTime = timestamp - fpsRef.current.lastTime
+      fpsRef.current.lastTime = timestamp
+      let fps = 1000 / deltaTime
+      if (fps > 58 && fps < 62) fps = 60
+      if (fps !== fpsRef.current.fps) {
+        fpsRef.current.fps = fps
+        console.log(`${fps} FPS`)
+      }
+      tick()
+      render()
+      requestAnimationFrame(gameLoop)
     }
-    tick()
-    render()
-    requestAnimationFrame(gameLoop)
+    catch (error) {
+      console.error(error)
+    }
   }
 
   function tick () {
-    state?.entities.tick(state)
     state?.players.tick()
     state?.blocks.tick(state)
+    state?.entities.tick(state)
   }
 
   function render () {
@@ -79,7 +84,7 @@ export default function Canvas () {
 
   function onKill (dto:KillDTO) {
     if (dto.i === myself) return
-    state?.players.players[dto.i].kill(false)
+    state?.players.players[dto.i].kill(false, state)
   }
 
   useEffect(() => {

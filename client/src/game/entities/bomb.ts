@@ -7,7 +7,7 @@ import { GameState } from '~/game/entities/state'
 import { isColliding, stopPlayer } from '~/game/util/collision'
 
 interface BombProps {
-  axes       ?: [number, number]
+  axes        : [number, number]
   player     ?: Player
   playerIndex : number
   reach       : number
@@ -40,12 +40,10 @@ interface Bomb {
 }
 
 export function BombFactory (props : BombProps) : Bomb {
-  const bomb : Bomb = props as unknown as Bomb
+  const bomb:Bomb = props as unknown as Bomb
   if (props.player) {
-    const [x,y] = props.player.getAxes()
-    bomb.axes = [x, y]
-    bomb.x = (y + 1) * TILE_SIZE || TILE_SIZE
-    bomb.y = (x + 1) * TILE_SIZE || TILE_SIZE
+    bomb.x = (props.axes[1] + 1) * TILE_SIZE || TILE_SIZE
+    bomb.y = (props.axes[0] + 1) * TILE_SIZE || TILE_SIZE
   }
   bomb.sprite = new Image()
   bomb.sprite.src = `/sprites/bombs/${props.state.bomb}.png`
@@ -61,7 +59,7 @@ export function BombFactory (props : BombProps) : Bomb {
   bomb.tick = tick.bind(bomb)
   bomb.render = render.bind(bomb)
   bomb.detonateTime = Date.now() + 3000
-  bomb.removeTime = bomb.detonateTime + 1500
+  bomb.removeTime = bomb.detonateTime + 1000
   return bomb
 }
 
@@ -130,25 +128,25 @@ function checkPlayerCollision (this:Bomb, state:GameState) {
   const [x, y] = state.players.myself?.getAxes() as [number, number]
   for (let i = this.directions.up - 1; i > -1; i--) {
     if (x === this.axes[0] - i && y === this.axes[1]) {
-      state.players.myself?.kill(true)
+      state.players.myself?.kill(true, state)
       return
     }
   }
   for (let i = this.directions.down - 1; i > -1; i--) {
     if (x === this.axes[0] + i && y === this.axes[1]) {
-      state.players.myself?.kill(true)
+      state.players.myself?.kill(true, state)
       return
     }
   }
   for (let i = this.directions.left - 1; i > -1; i--) {
     if (x === this.axes[0] && y === this.axes[1] - i) {
-      state.players.myself?.kill(true)
+      state.players.myself?.kill(true, state)
       return
     }
   }
   for (let i = this.directions.right - 1; i > -1; i--) {
     if (x === this.axes[0] && y === this.axes[1] + i) {
-      state.players.myself?.kill(true)
+      state.players.myself?.kill(true, state)
       return
     }
   }

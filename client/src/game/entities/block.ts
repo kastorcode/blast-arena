@@ -1,4 +1,4 @@
-import { TILE_SIZE } from '#/constants'
+import { SPEED, TILE_SIZE } from '#/constants'
 import { BlockDTO } from '#/dto'
 import { animate, AnimControl } from '~/game/animations/animation'
 import { BLOCK } from '~/game/animations/block'
@@ -20,6 +20,7 @@ export interface Blocks {
   blocks : (Block|Bonus|null)[][]
   getBlock     : (axes:[number,number]) => Block|Bonus|null
   destroyBlock : (axes:[number,number], state:GameState) => void
+  occupyBlock  : (axes:[number,number]) => void
   tick         : (state:GameState) => void
   render       : (context:CanvasRenderingContext2D, state:GameState) => void
 }
@@ -45,9 +46,10 @@ export function BlocksFactory (blocksDto : (BlockDTO|null)[][]) : Blocks {
   }))
   const getBlock = getOneBlock.bind(blocks)
   const destroyBlock = nullifyBlock.bind(blocks)
+  const occupyBlock = occupyOneBlock.bind(blocks)
   const tick = tickPlayer.bind(blocks)
   const render = renderBlocks.bind(blocks)
-  return { blocks, getBlock, destroyBlock, tick, render }
+  return { blocks, getBlock, destroyBlock, occupyBlock, tick, render }
 }
 
 function getOneBlock (this:Blocks['blocks'], axes:[number,number]) : Block|Bonus|null {
@@ -72,6 +74,11 @@ function nullifyBlock (this:Blocks['blocks'], axes:[number,number], state:GameSt
   }
 }
 
+function occupyOneBlock (this:Blocks['blocks'], axes:[number,number]) {
+  // @ts-ignore
+  this[axes[0]][axes[1]] = {tick: () => {}, render: () => {}}
+}
+
 function tickD (this:Block, state:GameState) : boolean {
   const colliding = isColliding(state.players.myself!, this)
   if (colliding) stopPlayer(state.players.myself!, this)
@@ -86,48 +93,48 @@ function tickI (this:Block, state:GameState) : boolean {
     if (p.x + 15 > this.x && p.side === 'R') {
       p.x = this.x - 15
       if (p.y + 23 - this.y <= TOLERANCE) {
-        p.y -= p.speed
-        p.x += p.speed
+        p.y -= SPEED
+        p.x += SPEED
       }
       else if (p.y - this.y >= 3) {
-        p.y += p.speed
-        p.x += p.speed
+        p.y += SPEED
+        p.x += SPEED
       }
       else p.moving = 0
     }
     else if (p.x < this.x + TILE_SIZE && p.side === 'L') {
       p.x = this.x + 17
       if (p.y + 23 - this.y <= TOLERANCE) {
-        p.y -= p.speed
-        p.x -= p.speed
+        p.y -= SPEED
+        p.x -= SPEED
       }
       else if (p.y - this.y >= 3) {
-        p.y += p.speed
-        p.x -= p.speed
+        p.y += SPEED
+        p.x -= SPEED
       }
       else p.moving = 0
     }
     else if (p.y + 23 > this.y && p.side === 'D') {
       p.y = this.y - 23
       if (p.x + 15 - this.x <= TOLERANCE) {
-        p.x -= p.speed
-        p.y += p.speed
+        p.x -= SPEED
+        p.y += SPEED
       }
       else if (this.x + TILE_SIZE - p.x <= TOLERANCE) {
-        p.x += p.speed
-        p.y += p.speed
+        p.x += SPEED
+        p.y += SPEED
       }
       else p.moving = 0
     }
     else {
       p.y = this.y + 9
       if (p.x + 15 - this.x <= TOLERANCE) {
-        p.x -= p.speed
-        p.y -= p.speed
+        p.x -= SPEED
+        p.y -= SPEED
       }
       else if (this.x + TILE_SIZE - p.x <= TOLERANCE) {
-        p.x += p.speed
-        p.y -= p.speed
+        p.x += SPEED
+        p.y -= SPEED
       }
       else p.moving = 0
     }
