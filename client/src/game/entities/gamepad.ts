@@ -43,18 +43,17 @@ function tick (this:GamepadHost, state:GameState) {
     if (gamepad.buttons[key].pressed) {
       this.player.startMove(MOVE_KEYS[key])
       useAxes = false
-      break
     }
     else {
       this.player.stopMove(MOVE_KEYS[key])
     }
   }
   if (useAxes) {
-    if      (gamepad.axes[0] > 0.25)  this.player.startMove('R')
-    else if (gamepad.axes[0] < -0.25) this.player.startMove('L')
-    else if (gamepad.axes[1] > 0.25)  this.player.startMove('D')
-    else if (gamepad.axes[1] < -0.25) this.player.startMove('U')
-    else                              this.player.stopMove(this.player.side)
+    if      (gamepad.axes[1] > 0.3)  this.player.startMove('D')
+    else if (gamepad.axes[1] < -0.3) this.player.startMove('U')
+    else if (gamepad.axes[0] > 0.2)  this.player.startMove('R')
+    else if (gamepad.axes[0] < -0.2) this.player.startMove('L')
+    else                             this.player.stopMove(this.player.side)
   }
   for (const key in BOMB_KEYS) {
     if (gamepad.buttons[key].pressed) this.player.placeBomb(state)

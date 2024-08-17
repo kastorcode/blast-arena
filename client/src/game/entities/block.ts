@@ -86,55 +86,55 @@ function tickD (this:Block, state:GameState) : boolean {
 }
 
 function tickI (this:Block, state:GameState) : boolean {
-  const TOLERANCE = 7
+  const TOLERANCE = 8
   const colliding = isColliding(state.players.myself!, this)
   if (colliding) {
     const p = state.players.myself!
     if (p.x + 15 > this.x && p.side === 'R') {
       p.x = this.x - 15
       if (p.y + 23 - this.y <= TOLERANCE) {
-        p.y -= SPEED
-        p.x += SPEED
+        p.y = Math.floor(p.y - SPEED)
+        p.x = Math.floor(p.x + SPEED)
       }
-      else if (p.y - this.y >= 3) {
-        p.y += SPEED
-        p.x += SPEED
+      else if (p.y - this.y >= 2) {
+        p.y = Math.floor(p.y + SPEED)
+        p.x = Math.floor(p.x + SPEED)
       }
       else p.moving = 0
     }
     else if (p.x < this.x + TILE_SIZE && p.side === 'L') {
       p.x = this.x + 17
       if (p.y + 23 - this.y <= TOLERANCE) {
-        p.y -= SPEED
-        p.x -= SPEED
+        p.y = Math.floor(p.y - SPEED)
+        p.x = Math.floor(p.x - SPEED)
       }
-      else if (p.y - this.y >= 3) {
-        p.y += SPEED
-        p.x -= SPEED
+      else if (p.y - this.y >= 2) {
+        p.y = Math.floor(p.y + SPEED)
+        p.x = Math.floor(p.x - SPEED)
       }
       else p.moving = 0
     }
     else if (p.y + 23 > this.y && p.side === 'D') {
       p.y = this.y - 23
       if (p.x + 15 - this.x <= TOLERANCE) {
-        p.x -= SPEED
-        p.y += SPEED
+        p.x = Math.floor(p.x - SPEED)
+        p.y = Math.floor(p.y + SPEED)
       }
       else if (this.x + TILE_SIZE - p.x <= TOLERANCE) {
-        p.x += SPEED
-        p.y += SPEED
+        p.x = Math.floor(p.x + SPEED)
+        p.y = Math.floor(p.y + SPEED)
       }
       else p.moving = 0
     }
     else {
       p.y = this.y + 9
       if (p.x + 15 - this.x <= TOLERANCE) {
-        p.x -= SPEED
-        p.y -= SPEED
+        p.x = Math.floor(p.x - SPEED)
+        p.y = Math.floor(p.y - SPEED)
       }
       else if (this.x + TILE_SIZE - p.x <= TOLERANCE) {
-        p.x += SPEED
-        p.y -= SPEED
+        p.x = Math.floor(p.x + SPEED)
+        p.y = Math.floor(p.y - SPEED)
       }
       else p.moving = 0
     }
