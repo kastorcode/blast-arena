@@ -36,8 +36,8 @@ export default function Canvas () {
   }
 
   function tick () {
-    state?.players.tick(state)
     state?.entities.tick(state)
+    state?.players.tick(state)
   }
 
   function render () {

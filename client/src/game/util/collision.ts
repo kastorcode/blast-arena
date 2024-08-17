@@ -15,7 +15,7 @@ export function isColliding (p:Player, o:Collision) : boolean {
 
 export function stopPlayer (p:Player, o:Collision) {
   p.moving = 0
-  playerCollisions[p.side](p, o)
+  playerCollisions[collisionSide(p, o)](p, o)
   const dto:MoveDTO = {h:p.holding, i:p.index, m:p.moving, s:p.side, x:p.x, y:p.y}
   socket.emit('mv', dto)
 }
@@ -25,6 +25,21 @@ const playerCollisions = {
   D: collidedUp,
   L: collidedRight,
   R: collidedLeft
+}
+
+export function collisionSide (p:Player, o:Collision) {
+  const deltaX = (p.x + 8) - (o.x + 8)
+  const deltaY = (p.y + 8) - (o.y + 8)
+  const absDeltaX = Math.abs(deltaX)
+  const absDeltaY = Math.abs(deltaY)
+  if (absDeltaX > absDeltaY) {
+    if (deltaX > 0) return 'L'
+    return 'R'
+  }
+  else {
+    if (deltaY > 0) return 'U'
+    return 'D'
+  }
 }
 
 function collidedUp (p:Player, o:Collision) {
@@ -40,5 +55,5 @@ function collidedLeft (p:Player, o:Collision) {
 }
 
 function collidedRight (p:Player, o:Collision) {
-  p.x = o.x + 17
+  p.x = o.x + 16
 }

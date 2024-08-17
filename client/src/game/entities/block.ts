@@ -25,6 +25,9 @@ export interface Blocks {
   render       : (context:CanvasRenderingContext2D, state:GameState) => void
 }
 
+const TOLERANCE_UP = 8
+const TOLERANCE_DOWN = 2
+
 export function BlocksFactory (blocksDto : (BlockDTO|null)[][]) : Blocks {
   const blocks = blocksDto.map((row,i) => row.map((dto,j) => {
     if (!dto) return null
@@ -38,6 +41,7 @@ export function BlocksFactory (blocksDto : (BlockDTO|null)[][]) : Blocks {
       block.render = renderAndDestroy.bind(block)
     }
     else {
+      block.axes = [i, j]
       block.destroy = () => {}
       block.tick = tickI.bind(block)
       block.render = () => {}
@@ -86,29 +90,30 @@ function tickD (this:Block, state:GameState) : boolean {
 }
 
 function tickI (this:Block, state:GameState) : boolean {
-  const TOLERANCE = 8
   const colliding = isColliding(state.players.myself!, this)
   if (colliding) {
     const p = state.players.myself!
+    const prevX = p.x
+    const prevY = p.y
     if (p.x + 15 > this.x && p.side === 'R') {
       p.x = this.x - 15
-      if (p.y + 23 - this.y <= TOLERANCE) {
+      if (p.y + 23 - this.y <= TOLERANCE_UP) {
         p.y = Math.floor(p.y - SPEED)
         p.x = Math.floor(p.x + SPEED)
       }
-      else if (p.y - this.y >= 2) {
+      else if (p.y - this.y >= TOLERANCE_DOWN) {
         p.y = Math.floor(p.y + SPEED)
         p.x = Math.floor(p.x + SPEED)
       }
       else p.moving = 0
     }
     else if (p.x < this.x + TILE_SIZE && p.side === 'L') {
-      p.x = this.x + 17
-      if (p.y + 23 - this.y <= TOLERANCE) {
+      p.x = this.x + 16
+      if (p.y + 23 - this.y <= TOLERANCE_UP) {
         p.y = Math.floor(p.y - SPEED)
         p.x = Math.floor(p.x - SPEED)
       }
-      else if (p.y - this.y >= 2) {
+      else if (p.y - this.y >= TOLERANCE_DOWN) {
         p.y = Math.floor(p.y + SPEED)
         p.x = Math.floor(p.x - SPEED)
       }
@@ -116,27 +121,35 @@ function tickI (this:Block, state:GameState) : boolean {
     }
     else if (p.y + 23 > this.y && p.side === 'D') {
       p.y = this.y - 23
-      if (p.x + 15 - this.x <= TOLERANCE) {
+      if (p.x + 15 - this.x <= TOLERANCE_UP) {
         p.x = Math.floor(p.x - SPEED)
         p.y = Math.floor(p.y + SPEED)
       }
-      else if (this.x + TILE_SIZE - p.x <= TOLERANCE) {
+      else if (this.x + TILE_SIZE - p.x <= TOLERANCE_UP) {
         p.x = Math.floor(p.x + SPEED)
         p.y = Math.floor(p.y + SPEED)
       }
       else p.moving = 0
     }
-    else {
+    else if (p.y < this.y + TILE_SIZE && p.side === 'U') {
       p.y = this.y + 9
-      if (p.x + 15 - this.x <= TOLERANCE) {
+      if (p.x + 15 - this.x <= TOLERANCE_UP) {
         p.x = Math.floor(p.x - SPEED)
         p.y = Math.floor(p.y - SPEED)
       }
-      else if (this.x + TILE_SIZE - p.x <= TOLERANCE) {
+      else if (this.x + TILE_SIZE - p.x <= TOLERANCE_UP) {
         p.x = Math.floor(p.x + SPEED)
         p.y = Math.floor(p.y - SPEED)
       }
       else p.moving = 0
+    }
+    const deltaX = p.x - prevX
+    const deltaY = p.y - prevY
+    if (!(deltaX > -3 && deltaX < 3)) {
+      p.x = prevX
+    }
+    if (!(deltaY > -3 && deltaY < 3)) {
+      p.y = prevY
     }
   }
   return colliding
