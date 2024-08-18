@@ -12,8 +12,9 @@ interface GamepadHost {
   id     : string
   index  : number
   player : Player
-  tick   : (state:GameState) => void
-  render : () => void
+  invertControls : () => void
+  tick           : (state:GameState) => void
+  render         : () => void
 }
 
 const MOVE_KEYS:{[key:number]:SIDES} = {
@@ -31,6 +32,7 @@ export function GamepadFactory (props:GamepadProps) : GamepadHost {
     player: props.player,
     render: () => {}
   } as GamepadHost
+  host.invertControls = invertControls.bind(host)
   host.tick = tick.bind(host)
   return host
 }
@@ -49,13 +51,20 @@ function tick (this:GamepadHost, state:GameState) {
     }
   }
   if (useAxes) {
-    if      (gamepad.axes[1] > 0.3)  this.player.startMove('D')
-    else if (gamepad.axes[1] < -0.3) this.player.startMove('U')
-    else if (gamepad.axes[0] > 0.2)  this.player.startMove('R')
-    else if (gamepad.axes[0] < -0.2) this.player.startMove('L')
+    if      (gamepad.axes[1] > 0.3)  this.player.startMove(MOVE_KEYS[13])
+    else if (gamepad.axes[1] < -0.3) this.player.startMove(MOVE_KEYS[12])
+    else if (gamepad.axes[0] > 0.2)  this.player.startMove(MOVE_KEYS[15])
+    else if (gamepad.axes[0] < -0.2) this.player.startMove(MOVE_KEYS[14])
     else                             this.player.stopMove(this.player.side)
   }
   for (const key in BOMB_KEYS) {
     if (gamepad.buttons[key].pressed) this.player.placeBomb(state)
   }
+}
+
+function invertControls () {
+  MOVE_KEYS[12] = 'D'
+  MOVE_KEYS[14] = 'R'
+  MOVE_KEYS[13] = 'U'
+  MOVE_KEYS[15] = 'L'
 }

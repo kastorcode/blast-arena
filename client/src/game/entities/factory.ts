@@ -2,8 +2,9 @@ import { GameState } from '~/game/entities/state'
 
 interface Entity {
   id     : string
-  tick   : (state:GameState) => void
-  render : (context:CanvasRenderingContext2D) => void
+  invertControls ?: () => void
+  tick            : (state:GameState) => void
+  render          : (context:CanvasRenderingContext2D) => void
 }
 
 export interface Entities {

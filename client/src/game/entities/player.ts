@@ -40,6 +40,7 @@ export interface Player {
   moves                : {[key in SIDES] : () => void}
   onMove               : (dto:MoveDTO) => void
   stopMove             : (side:SIDES) => void
+  invertControls       : () => void
   placeBomb            : (state:GameState) => void
   kill                 : (emit:boolean, state:GameState) => void
   tick                 : (state:GameState) => void
@@ -96,6 +97,7 @@ export function PlayerFactory (props:PlayerProps) : Player {
   player.moves = { D: moveDown.bind(player), L: moveLeft.bind(player), R: moveRight.bind(player), U: moveUp.bind(player) }
   player.onMove = onMove.bind(player)
   player.stopMove = stopMove.bind(player)
+  player.invertControls = invertControls.bind(player)
   player.placeBomb = placeBomb.bind(player)
   player.kill = kill.bind(player)
   player.tick = tick.bind(player)
@@ -151,7 +153,9 @@ function keyupListener (this:Player, event:KeyboardEvent) {
 function addGamepadSupport (this:Player, state:GameState) {
   const id = `G${this.index}`
   if (state.entities.has(id)) return
-  state.entities.add(GamepadFactory({id, index:0, player:this}))
+  const gamepad = GamepadFactory({id, index:0, player:this})
+  if (MOVE_KEYS['W'] === 'D') gamepad.invertControls()
+  state.entities.add(gamepad)
 }
 
 function removeGamepadSupport (this:Player, state:GameState) {
@@ -247,6 +251,17 @@ function stopMove (this:Player, side:SIDES) {
   }
   const dto:MoveDTO = {h:this.holding, i:this.index, m:this.moving, s:this.side, x:this.x, y:this.y}
   socket.emit('mv', dto)
+}
+
+function invertControls () {
+  MOVE_KEYS['W'] = 'D'
+  MOVE_KEYS['A'] = 'R'
+  MOVE_KEYS['S'] = 'U'
+  MOVE_KEYS['D'] = 'L'
+  MOVE_KEYS['ARROWUP'] = 'D'
+  MOVE_KEYS['ARROWLEFT'] = 'R'
+  MOVE_KEYS['ARROWDOWN'] = 'U'
+  MOVE_KEYS['ARROWRIGHT'] = 'L'
 }
 
 function placeBomb (this:Player, state:GameState) {

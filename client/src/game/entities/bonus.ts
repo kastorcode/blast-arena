@@ -27,12 +27,12 @@ export interface Bonus {
 const BONUS:{[key:number]:(props:BonusProps) => Bonus} = {
   1:BombBonus,
   2:BlastBonus,
-  3:PassBonus,
-  4:PassBonus,
+  3:InvertBonus,
+  4:InvertBonus,
   5:SpeedBonus,
   6:SlowBonus,
   7:PassBonus,
-  8:PassBonus,
+  8:InvertBonus,
   9:KillBonus
 }
 
@@ -143,6 +143,30 @@ function PassBonus (props:BonusProps) : Bonus {
   }
   pass.sprite.src = `/sprites/bonus/${props.state.bonus}.png`
   return pass
+}
+
+function InvertBonus (props:BonusProps) : Bonus {
+  const invert:Bonus = {
+    axes  : props.axes,
+    bonus : props.bonus,
+    sprite: new Image(),
+    t     : 'B',
+    x     : props.x,
+    y     : props.y,
+    tick: (state:GameState) => {
+      collided(state, invert, () => {
+        state.players.myself!.invertControls()
+        state.entities.entities.forEach(e => {
+          e['invertControls'] && e['invertControls']()
+        })
+      })
+    },
+    render: (context:CanvasRenderingContext2D) => {
+      context.drawImage(invert.sprite, 0, 96, TILE_SIZE, TILE_SIZE, invert.x, invert.y, TILE_SIZE, TILE_SIZE)
+    }
+  }
+  invert.sprite.src = `/sprites/bonus/${props.state.bonus}.png`
+  return invert
 }
 
 function KillBonus (props:BonusProps) : Bonus {
