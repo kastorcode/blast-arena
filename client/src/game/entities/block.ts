@@ -102,16 +102,24 @@ function tickI (this:Block, state:GameState) : boolean {
         p.x = Math.floor(p.x + SPEED)
       }
       else if (p.y - this.y >= TOLERANCE_DOWN) {
-        p.y = Math.floor(p.y + SPEED)
-        p.x = Math.floor(p.x + SPEED)
+        const b = state.blocks.getBlock([this.axes[0]+1, this.axes[1]])
+        if (!b || b.t === 'B') {
+          p.y = Math.floor(p.y + SPEED)
+          p.x = Math.floor(p.x + SPEED)
+        }
+        else p.moving = 0
       }
       else p.moving = 0
     }
     else if (p.x < this.x + TILE_SIZE && p.side === 'L') {
       p.x = this.x + 16
       if (p.y + 23 - this.y <= TOLERANCE_UP) {
-        p.y = Math.floor(p.y - SPEED)
-        p.x = Math.floor(p.x - SPEED)
+        const b = state.blocks.getBlock([this.axes[0]-1, this.axes[1]])
+        if (!b || b.t === 'B') {
+          p.y = Math.floor(p.y - SPEED)
+          p.x = Math.floor(p.x - SPEED)
+        }
+        else p.moving = 0
       }
       else if (p.y - this.y >= TOLERANCE_DOWN) {
         p.y = Math.floor(p.y + SPEED)

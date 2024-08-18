@@ -29,7 +29,7 @@ const playerCollisions = {
 
 export function collisionSide (p:Player, o:Collision) {
   const deltaX = (p.x + 8) - (o.x + 8)
-  const deltaY = (p.y + 8) - (o.y + 8)
+  const deltaY = (p.y + 7) - o.y
   const absDeltaX = Math.abs(deltaX)
   const absDeltaY = Math.abs(deltaY)
   if (absDeltaX > absDeltaY) {
