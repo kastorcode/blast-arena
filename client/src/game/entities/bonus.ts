@@ -1,7 +1,8 @@
 import { MAX_SPEED, SPEED, TILE_SIZE } from '#/constants'
 import { NullifyBlockDTO } from '#/dto'
+import { PassFactory } from '~/game/entities/pass'
 import { GameState } from '~/game/entities/state'
-import { isColliding } from '~/game/util/collision'
+import { isCollidingForced } from '~/game/util/collision'
 import socket from '~/services/socket'
 
 interface BonusProps {
@@ -26,12 +27,12 @@ export interface Bonus {
 const BONUS:{[key:number]:(props:BonusProps) => Bonus} = {
   1:BombBonus,
   2:BlastBonus,
-  3:BlastBonus,
-  4:BlastBonus,
+  3:PassBonus,
+  4:PassBonus,
   5:SpeedBonus,
   6:SlowBonus,
-  7:KillBonus,
-  8:KillBonus,
+  7:PassBonus,
+  8:PassBonus,
   9:KillBonus
 }
 
@@ -123,6 +124,27 @@ function SlowBonus (props:BonusProps) : Bonus {
   return slow
 }
 
+function PassBonus (props:BonusProps) : Bonus {
+  const pass:Bonus = {
+    axes  : props.axes,
+    bonus : props.bonus,
+    sprite: new Image(),
+    t     : 'B',
+    x     : props.x,
+    y     : props.y,
+    tick: (state:GameState) => {
+      collided(state, pass, () => {
+        state.entities.add(PassFactory({state}))
+      })
+    },
+    render: (context:CanvasRenderingContext2D) => {
+      context.drawImage(pass.sprite, 0, 80, TILE_SIZE, TILE_SIZE, pass.x, pass.y, TILE_SIZE, TILE_SIZE)
+    }
+  }
+  pass.sprite.src = `/sprites/bonus/${props.state.bonus}.png`
+  return pass
+}
+
 function KillBonus (props:BonusProps) : Bonus {
   const kill:Bonus = {
     axes  : props.axes,
@@ -145,7 +167,7 @@ function KillBonus (props:BonusProps) : Bonus {
 }
 
 function collided (state:GameState, bonus:Bonus, callback:()=>void) {
-  if (isColliding(state.players.myself!, bonus)) {
+  if (isCollidingForced(state.players.myself!, bonus)) {
     const dto:NullifyBlockDTO = {a:bonus.axes}
     socket.emit('nb', dto)
     state.blocks.destroyBlock(bonus.axes, state)

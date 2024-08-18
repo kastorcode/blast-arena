@@ -9,6 +9,11 @@ interface Collision {
 }
 
 export function isColliding (p:Player, o:Collision) : boolean {
+  if (p.collidable) return isCollidingForced(p, o)
+  return false
+}
+
+export function isCollidingForced (p:Player, o:Collision) : boolean {
   return p.x + 15 > o.x && p.x < o.x + TILE_SIZE &&
          p.y + 23 > o.y && p.y + 7 < o.y + TILE_SIZE
 }

@@ -18,6 +18,7 @@ export interface Player {
   anim       : AnimControl['anim']
   bombReach  : number
   bombs      : number
+  collidable : boolean
   holding    : 0|1
   index      : number
   moving     : 0|1
@@ -72,6 +73,7 @@ export function PlayerFactory (props:PlayerProps) : Player {
     anim: {frameCurrent:0, lastRender:0, sum:true},
     bombReach: 2,
     bombs: 1,
+    collidable: true,
     holding: 0,
     index: props.index,
     moving: 0,
@@ -176,32 +178,52 @@ function moveTick (this:Player, state:GameState) {
 function moveDown (this:Player) {
   this.y += this.speed
   if (this.y > 169) {
-    this.y = 169
-    this.moving = 0
+    if (this.collidable) {
+      this.y = 169
+      this.moving = 0
+    }
+    else if (this.y > 175) {
+      this.y = 2
+    }
   }
 }
 
 function moveUp (this:Player) {
   this.y -= this.speed
   if (this.y < 9) {
-    this.y = 9
-    this.moving = 0
+    if (this.collidable) {
+      this.y = 9
+      this.moving = 0
+    }
+    else if (this.y < 2) {
+      this.y = 175
+    }
   }
 }
 
 function moveRight (this:Player) {
   this.x += this.speed
   if (this.x > 209) {
-    this.x = 209
-    this.moving = 0
+    if (this.collidable) {
+      this.x = 209
+      this.moving = 0
+    }
+    else if (this.x > 217) {
+      this.x = 7
+    }
   }
 }
 
 function moveLeft (this:Player) {
   this.x -= this.speed
   if (this.x < 17) {
-    this.x = 17
-    this.moving = 0
+    if (this.collidable) {
+      this.x = 17
+      this.moving = 0
+    }
+    else if (this.x < 7) {
+      this.x = 217
+    }
   }
 }
 
