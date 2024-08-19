@@ -16,7 +16,7 @@ export interface GameStateDTO {
 }
 
 export interface KillDTO {
-  i : number // player index
+  p : number // player index
 }
 
 export interface LobbyDTO {
@@ -24,13 +24,19 @@ export interface LobbyDTO {
   players : UserDTO[]
 }
 
+export interface MoveBombDTO {
+  i : string // bomb id
+  p : number // player index
+  s : SIDES  // bomb side
+}
+
 export interface MoveDTO {
-  h : 0|1     // if player is holding
-  i : number  // player index
-  m : 0|1     // if player is moving
-  s : SIDES   // player side
-  x : number  // player x position
-  y : number  // player y position
+  h : 0|1    // if player is holding
+  m : 0|1    // if player is moving
+  p : number // player index
+  s : SIDES  // player side
+  x : number // player x position
+  y : number // player y position
 }
 
 export interface NullifyBlockDTO {
@@ -39,7 +45,8 @@ export interface NullifyBlockDTO {
 
 export interface PlaceBombDTO {
   a : [number, number] // bomb axes
-  i : number           // player index
+  i : string           // bomb id
+  p : number           // player index
   r : number           // bomb reach
   x : number           // bomb x position
   y : number           // bomb y position

@@ -27,8 +27,8 @@ export interface Bonus {
 const BONUS:{[key:number]:(props:BonusProps) => Bonus} = {
   1:BombBonus,
   2:BlastBonus,
-  3:InvertBonus,
-  4:InvertBonus,
+  3:KickBonus,
+  4:KickBonus,
   5:SpeedBonus,
   6:SlowBonus,
   7:PassBonus,
@@ -80,6 +80,27 @@ function BlastBonus (props:BonusProps) : Bonus {
   }
   blast.sprite.src = `/sprites/bonus/${props.state.bonus}.png`
   return blast
+}
+
+function KickBonus (props:BonusProps) : Bonus {
+  const kick:Bonus = {
+    axes  : props.axes,
+    bonus : props.bonus,
+    sprite: new Image(),
+    t     : 'B',
+    x     : props.x,
+    y     : props.y,
+    tick: (state:GameState) => {
+      collided(state, kick, () => {
+        state.players.myself!.kick = true
+      })
+    },
+    render: (context:CanvasRenderingContext2D) => {
+      context.drawImage(kick.sprite, 0, 32, TILE_SIZE, TILE_SIZE, kick.x, kick.y, TILE_SIZE, TILE_SIZE)
+    }
+  }
+  kick.sprite.src = `/sprites/bonus/${props.state.bonus}.png`
+  return kick
 }
 
 function SpeedBonus (props:BonusProps) : Bonus {

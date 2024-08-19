@@ -21,7 +21,7 @@ export function isCollidingForced (p:Player, o:Collision) : boolean {
 export function stopPlayer (p:Player, o:Collision) {
   p.moving = 0
   playerCollisions[collisionSide(p, o)](p, o)
-  const dto:MoveDTO = {h:p.holding, i:p.index, m:p.moving, s:p.side, x:p.x, y:p.y}
+  const dto:MoveDTO = {h:p.holding, m:p.moving, p:p.index, s:p.side, x:p.x, y:p.y}
   socket.emit('mv', dto)
 }
 

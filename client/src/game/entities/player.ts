@@ -21,6 +21,7 @@ export interface Player {
   collidable : boolean
   holding    : 0|1
   index      : number
+  kick       : boolean
   moving     : 0|1
   myself     : boolean
   nick       : PlayerDTO['nick']
@@ -77,6 +78,7 @@ export function PlayerFactory (props:PlayerProps) : Player {
     collidable: true,
     holding: 0,
     index: props.index,
+    kick: false,
     moving: 0,
     myself: false,
     nick: props.nick,
@@ -175,7 +177,7 @@ function moveTick (this:Player, state:GameState) {
   this.moves[this.side]()
   if (!this.myself) return
   state.blocks.tick(state)
-  const dto:MoveDTO = {h:this.holding, i:this.index, m:this.moving, s:this.side, x:this.x, y:this.y}
+  const dto:MoveDTO = {h:this.holding, m:this.moving, p:this.index, s:this.side, x:this.x, y:this.y}
   socket.emit('mv', dto)
 }
 
@@ -249,7 +251,7 @@ function stopMove (this:Player, side:SIDES) {
       break
     }
   }
-  const dto:MoveDTO = {h:this.holding, i:this.index, m:this.moving, s:this.side, x:this.x, y:this.y}
+  const dto:MoveDTO = {h:this.holding, m:this.moving, p:this.index, s:this.side, x:this.x, y:this.y}
   socket.emit('mv', dto)
 }
 
@@ -280,7 +282,8 @@ function placeBomb (this:Player, state:GameState) {
   })
   const dto:PlaceBombDTO = {
     a: bomb.axes,
-    i: bomb.playerIndex,
+    i: bomb.id,
+    p: bomb.playerIndex,
     r: bomb.reach,
     x: bomb.x,
     y: bomb.y
@@ -304,7 +307,7 @@ function kill (this:Player, emit:boolean, state:GameState) {
   }
   if (!emit) return
   this.removeGamepadSupport(state)
-  const dto:KillDTO = {i:this.index}
+  const dto:KillDTO = {p:this.index}
   socket.emit('kl', dto)
 }
 

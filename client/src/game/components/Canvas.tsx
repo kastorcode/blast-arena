@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
-import { KillDTO, MoveDTO, NullifyBlockDTO, PlaceBombDTO, StartGameDTO } from '#/dto'
+import { KillDTO, MoveBombDTO, MoveDTO, NullifyBlockDTO, PlaceBombDTO, StartGameDTO } from '#/dto'
 import { BlocksFactory } from '~/game/entities/block'
-import { BombFactory } from '~/game/entities/bomb'
+import { Bomb, BombFactory } from '~/game/entities/bomb'
 import { EntitiesFactory } from '~/game/entities/factory'
 import { PlayersFactory } from '~/game/entities/players'
 import { StageFactory } from '~/game/entities/stage'
@@ -61,20 +61,27 @@ export default function Canvas () {
   }
 
   function onMove (dto:MoveDTO) {
-    if (dto.i === myself) return
-    state?.players.players[dto.i].onMove(dto)
+    if (dto.p === myself) return
+    state?.players.players[dto.p].onMove(dto)
   }
 
   function onPlaceBomb (dto:PlaceBombDTO) {
-    if (dto.i === myself) return
+    if (dto.p === myself) return
     state?.entities.add(BombFactory({
       state,
       axes: dto.a,
-      playerIndex: dto.i,
+      id: dto.i,
+      playerIndex: dto.p,
       reach: dto.r,
       x: dto.x,
       y: dto.y
     }))
+  }
+
+  function onMoveBomb (dto:MoveBombDTO) {
+    if (dto.p === myself) return
+    const bomb = state!.entities.get(dto.i) as Bomb
+    bomb.startMove(dto.s, state!)
   }
 
   function onNullifyBlock (dto:NullifyBlockDTO) {
@@ -82,8 +89,8 @@ export default function Canvas () {
   }
 
   function onKill (dto:KillDTO) {
-    if (dto.i === myself) return
-    state?.players.players[dto.i].kill(false, state)
+    if (dto.p === myself) return
+    state?.players.players[dto.p].kill(false, state)
   }
 
   useEffect(() => {
@@ -91,6 +98,7 @@ export default function Canvas () {
     socket.on('start_game', startGame)
     socket.on('mv', onMove)
     socket.on('pb', onPlaceBomb)
+    socket.on('mb', onMoveBomb)
     socket.on('nb', onNullifyBlock)
     socket.on('kl', onKill)
     return () => {
@@ -98,6 +106,7 @@ export default function Canvas () {
       socket.off('start_game', startGame)
       socket.off('mv', onMove)
       socket.off('pb', onPlaceBomb)
+      socket.off('mb', onMoveBomb)
       socket.off('nb', onNullifyBlock)
       socket.off('kl', onKill)
     }

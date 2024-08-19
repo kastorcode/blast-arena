@@ -1,6 +1,10 @@
 export const BLASTS = 1
 
+export const BOMB_MOVE = 3 // moves 2 tiles when kicked
+
 export const BOMBS = 1
+
+export const BOMB_SPEED = 2
 
 export const BONUS = 1
 
