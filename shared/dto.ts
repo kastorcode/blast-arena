@@ -7,12 +7,25 @@ export interface BlockDTO {
   y  : number  // block y position
 }
 
+export interface FlingBombDTO {
+  i : string // bomb id
+  p : number // player index
+  s : SIDES  // bomb side
+  x : number // player x position
+  y : number // player y position
+}
+
 export interface GameStateDTO {
   blast  : number
   blocks : (BlockDTO|null)[][]
   bomb   : number
   bonus  : number
   stage  : number
+}
+
+export interface HoldBombDTO {
+  i : string // bomb id
+  p : number // player index
 }
 
 export interface KillDTO {

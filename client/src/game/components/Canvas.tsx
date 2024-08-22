@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { KillDTO, MoveBombDTO, MoveDTO, NullifyBlockDTO, PlaceBombDTO, StartGameDTO } from '#/dto'
+import { FlingBombDTO, HoldBombDTO, KillDTO, MoveBombDTO, MoveDTO, NullifyBlockDTO, PlaceBombDTO, StartGameDTO } from '#/dto'
 import { BlocksFactory } from '~/game/entities/block'
 import { Bomb, BombFactory } from '~/game/entities/bomb'
 import { EntitiesFactory } from '~/game/entities/factory'
@@ -43,10 +43,10 @@ export default function Canvas () {
   function render () {
     // @ts-ignore
     context?.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height)
-    state?.stage.render(context as CanvasRenderingContext2D)
-    state?.blocks.render(context as CanvasRenderingContext2D, state)
-    state?.entities.render(context as CanvasRenderingContext2D)
-    state?.players.render(context as CanvasRenderingContext2D)
+    state?.stage.render(context!)
+    state?.blocks.render(context!, state)
+    state?.players.render(context!)
+    state?.entities.render(context!)
   }
 
   function startGame (dto:StartGameDTO) {
@@ -84,6 +84,21 @@ export default function Canvas () {
     bomb.startMove(dto.s, state!)
   }
 
+  function onHoldBomb (dto:HoldBombDTO) {
+    if (dto.p === myself) return
+    const bomb = state!.entities.get(dto.i) as Bomb
+    state!.players.players[dto.p].holding = 1
+    bomb.setHolding(dto.p, state!)
+  }
+
+  function onFlingBomb (dto:FlingBombDTO) {
+    if (dto.p === myself) return
+    const bomb = state!.entities.get(dto.i) as Bomb
+    bomb.x = dto.x
+    bomb.y = dto.y
+    bomb.startFling(dto.s)
+  }
+
   function onNullifyBlock (dto:NullifyBlockDTO) {
     state?.blocks.destroyBlock(dto.a, state)
   }
@@ -99,6 +114,8 @@ export default function Canvas () {
     socket.on('mv', onMove)
     socket.on('pb', onPlaceBomb)
     socket.on('mb', onMoveBomb)
+    socket.on('hb', onHoldBomb)
+    socket.on('fb', onFlingBomb)
     socket.on('nb', onNullifyBlock)
     socket.on('kl', onKill)
     return () => {
@@ -107,6 +124,8 @@ export default function Canvas () {
       socket.off('mv', onMove)
       socket.off('pb', onPlaceBomb)
       socket.off('mb', onMoveBomb)
+      socket.off('hb', onHoldBomb)
+      socket.off('fb', onFlingBomb)
       socket.off('nb', onNullifyBlock)
       socket.off('kl', onKill)
     }

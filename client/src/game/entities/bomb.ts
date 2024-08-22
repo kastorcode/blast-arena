@@ -22,15 +22,15 @@ interface BombProps {
 export interface Bomb {
   anim          : AnimControl['anim']
   armed         : boolean
-  axes          : [number, number]
   blast         : Blast
   collidable    : boolean
   detonated     : boolean
   detonateTime  : number
   directions    : Directions
   finalPosition : number
+  flinging      : boolean
+  holding       : boolean
   id            : string
-  moves         : {[key in SIDES]:(state:GameState) => void}
   moving        : boolean
   player       ?: Player
   playerIndex   : number
@@ -40,11 +40,16 @@ export interface Bomb {
   sprite        : HTMLImageElement
   x             : number
   y             : number
-  setDetonation        : () => void
+  moves  : {[key in SIDES]:(state:GameState) => void}
+  flings : {[key in SIDES]:(state:GameState) => void}
+  getAxes              : () => [number, number]
+  setDetonation        : (multiplier?:number) => void
   detonate             : (state:GameState) => void
   checkPlayerCollision : (state:GameState) => void
   startMove            : (side:SIDES, state:GameState) => void
   stopMove             : (state:GameState) => void
+  setHolding           : (playerIndex:number, state:GameState) => void
+  startFling           : (side:SIDES) => void
   tick                 : (state:GameState) => void
   render               : (context:CanvasRenderingContext2D) => void
 }
@@ -52,7 +57,7 @@ export interface Bomb {
 export function BombFactory (props : BombProps) : Bomb {
   const bomb:Bomb = props as unknown as Bomb
   if (props.player) {
-    bomb.id = `B${Math.floor(Math.random() * 9999999)}`
+    bomb.id = `O${Math.floor(Math.random() * 9999999)}`
     bomb.x = (props.axes[1] + 1) * TILE_SIZE || TILE_SIZE
     bomb.y = (props.axes[0] + 1) * TILE_SIZE || TILE_SIZE
   }
@@ -64,30 +69,43 @@ export function BombFactory (props : BombProps) : Bomb {
   bomb.blast = BlastFactory(props.state)
   bomb.collidable = false
   bomb.directions = {up:0, right:0, down:0, left:0}
-  bomb.moves = {'D':moveDown.bind(bomb), 'U':moveUp.bind(bomb), 'R':moveRight.bind(bomb), 'L':moveLeft.bind(bomb)}
+  bomb.holding = false
   bomb.moving = false
+  bomb.moves = {'D':moveDown.bind(bomb), 'U':moveUp.bind(bomb), 'R':moveRight.bind(bomb), 'L':moveLeft.bind(bomb)}
+  bomb.flings = {'D':flingDown.bind(bomb), 'U':flingUp.bind(bomb), 'R':flingRight.bind(bomb), 'L':flingLeft.bind(bomb)}
+  bomb.getAxes = getAxes.bind(bomb)
   bomb.setDetonation = setDetonation.bind(bomb)
   bomb.detonate = detonate.bind(bomb)
   bomb.checkPlayerCollision = checkPlayerCollision.bind(bomb)
   bomb.startMove = startMove.bind(bomb)
   bomb.stopMove = stopMove.bind(bomb)
+  bomb.setHolding = setHolding.bind(bomb)
+  bomb.startFling = startFling.bind(bomb)
   bomb.tick = tick.bind(bomb)
   bomb.render = render.bind(bomb)
   bomb.setDetonation()
   return bomb
 }
 
-function setDetonation (this:Bomb) {
-  this.detonateTime = Date.now() + 3000
+function getAxes (this:Bomb) : [number, number] {
+  const x = Math.round(this.y / TILE_SIZE) - 1
+  const y = Math.round(this.x / TILE_SIZE) - 1
+  return [x, y]
+}
+
+function setDetonation (this:Bomb, multiplier=1) {
+  this.detonateTime = Date.now() + (3000 * multiplier)
   this.removeTime = this.detonateTime + 1000
 }
 
 function detonate (this:Bomb, state:GameState) {
+  if (this.holding) this.stopMove(state)
   this.armed = false
   this.detonated = true
-  for (let i = this.axes[0]; i > -1; i--) {
+  const [ax, ay] = this.getAxes()
+  for (let i = ax; i > -1; i--) {
     if (this.directions.up === this.reach) break
-    const b = state.blocks.getBlock([i, this.axes[1]])
+    const b = state.blocks.getBlock([i, ay])
     if (!b) this.directions.up++
     else if (b.t === 'D') {
       b.destroy()
@@ -96,12 +114,12 @@ function detonate (this:Bomb, state:GameState) {
     else if (b.t === 'I') break
     else {
       this.directions.up++
-      state.blocks.destroyBlock([i, this.axes[1]], state)
+      state.blocks.destroyBlock([i, ay], state)
     }
   }
-  for (let i = this.axes[1]; i < 13; i++) {
+  for (let i = ay; i < 13; i++) {
     if (this.directions.right === this.reach) break
-    const b = state.blocks.getBlock([this.axes[0], i])
+    const b = state.blocks.getBlock([ax, i])
     if (!b) this.directions.right++
     else if (b.t === 'D') {
       b.destroy()
@@ -110,12 +128,12 @@ function detonate (this:Bomb, state:GameState) {
     else if (b.t === 'I') break
     else {
       this.directions.right++
-      state.blocks.destroyBlock([this.axes[0], i], state)
+      state.blocks.destroyBlock([ax, i], state)
     }
   }
-  for (let i = this.axes[0]; i < 11; i++) {
+  for (let i = ax; i < 11; i++) {
     if (this.directions.down === this.reach) break
-    const b = state.blocks.getBlock([i, this.axes[1]])
+    const b = state.blocks.getBlock([i, ay])
     if (!b) this.directions.down++
     else if (b.t === 'D') {
       b.destroy()
@@ -124,12 +142,12 @@ function detonate (this:Bomb, state:GameState) {
     else if (b.t === 'I') break
     else {
       this.directions.down++
-      state.blocks.destroyBlock([i, this.axes[1]], state)
+      state.blocks.destroyBlock([i, ay], state)
     }
   }
-  for (let i = this.axes[1]; i > -1; i--) {
+  for (let i = ay; i > -1; i--) {
     if (this.directions.left === this.reach) break
-    const b = state.blocks.getBlock([this.axes[0], i])
+    const b = state.blocks.getBlock([ax, i])
     if (!b) this.directions.left++
     else if (b.t === 'D') {
       b.destroy()
@@ -138,66 +156,68 @@ function detonate (this:Bomb, state:GameState) {
     else if (b.t === 'I') break
     else {
       this.directions.left++
-      state.blocks.destroyBlock([this.axes[0], i], state)
+      state.blocks.destroyBlock([ax, i], state)
     }
   }
 }
 
 function checkPlayerCollision (this:Bomb, state:GameState) {
-  const [x, y] = state.players.myself?.getAxes() as [number, number]
+  const [px, py] = state.players.myself!.getAxes()
+  const [ax, ay] = this.getAxes()
   for (let i = this.directions.up - 1; i > -1; i--) {
-    if (x === this.axes[0] - i && y === this.axes[1]) {
-      state.players.myself?.kill(true, state)
+    if (px === ax - i && py === ay) {
+      state.players.myself!.kill(true, state)
       return
     }
   }
   for (let i = this.directions.down - 1; i > -1; i--) {
-    if (x === this.axes[0] + i && y === this.axes[1]) {
-      state.players.myself?.kill(true, state)
+    if (px === ax + i && py === ay) {
+      state.players.myself!.kill(true, state)
       return
     }
   }
   for (let i = this.directions.left - 1; i > -1; i--) {
-    if (x === this.axes[0] && y === this.axes[1] - i) {
-      state.players.myself?.kill(true, state)
+    if (px === ax && py === ay - i) {
+      state.players.myself!.kill(true, state)
       return
     }
   }
   for (let i = this.directions.right - 1; i > -1; i--) {
-    if (x === this.axes[0] && y === this.axes[1] + i) {
-      state.players.myself?.kill(true, state)
+    if (px === ax && py === ay + i) {
+      state.players.myself!.kill(true, state)
       return
     }
   }
 }
 
 function startMove (this:Bomb, side:SIDES, state:GameState) {
+  const [ax, ay] = this.getAxes()
   let move = 0
   try {
     if (side === 'D') {
       for (let i = 1; i < BOMB_MOVE; i++) {
-        const b = state.blocks.getBlock([this.axes[0] + i, this.axes[1]])
+        const b = state.blocks.getBlock([ax + i, ay])
         if (b && b.t !== 'B') break
         move++
       }
     }
     else if (side === 'U') {
       for (let i = 1; i < BOMB_MOVE; i++) {
-        const b = state.blocks.getBlock([this.axes[0] - i, this.axes[1]])
+        const b = state.blocks.getBlock([ax - i, ay])
         if (b && b.t !== 'B') break
         move++
       }
     }
     else if (side === 'R') {
       for (let i = 1; i < BOMB_MOVE; i++) {
-        const b = state.blocks.getBlock([this.axes[0], this.axes[1] + i])
+        const b = state.blocks.getBlock([ax, ay + i])
         if (b && b.t !== 'B') break
         move++
       }
     }
     else if (side === 'L') {
       for (let i = 1; i < BOMB_MOVE; i++) {
-        const b = state.blocks.getBlock([this.axes[0], this.axes[1] - i])
+        const b = state.blocks.getBlock([ax, ay - i])
         if (b && b.t !== 'B') break
         move++
       }
@@ -205,7 +225,7 @@ function startMove (this:Bomb, side:SIDES, state:GameState) {
   }
   catch {}
   if (move) {
-    state.blocks.destroyBlock(this.axes, state)
+    state.blocks.destroyBlock([ax, ay], state)
     this.collidable = false
     this.side = side
     this.moving = true
@@ -229,8 +249,13 @@ function startMove (this:Bomb, side:SIDES, state:GameState) {
 }
 
 function stopMove (this:Bomb, state:GameState) {
+  if (this.holding) this.y += 12
   this.moving = false
-  this.axes = [Math.floor(this.y / TILE_SIZE) - 1, Math.floor(this.x / TILE_SIZE) - 1]
+  this.flinging = false
+  this.holding = false
+  this.x = Math.round(this.x / TILE_SIZE) * TILE_SIZE
+  this.y = Math.round(this.y / TILE_SIZE) * TILE_SIZE
+  state.blocks.putBomb(this)
   if (!isColliding(state.players.myself!, this)) {
     this.collidable = true
   }
@@ -270,6 +295,88 @@ function moveLeft (this:Bomb, state:GameState) {
   }
 }
 
+function setHolding (this:Bomb, playerIndex:number, state:GameState) {
+  state.blocks.destroyBlock(this.getAxes(), state)
+  this.playerIndex = playerIndex
+  this.collidable = false
+  this.holding = true
+  this.setDetonation(2)
+}
+
+function startFling (this:Bomb, side:SIDES) {
+  this.holding = false
+  this.collidable = false
+  this.side = side
+  this.flinging = true
+  if (side === 'D') {
+    this.finalPosition = this.y + (TILE_SIZE * 3)
+  }
+  else if (side === 'U') {
+    this.finalPosition = this.y - TILE_SIZE
+  }
+  else if (side === 'R') {
+    this.y += 12
+    this.finalPosition = this.x + (TILE_SIZE * 2)
+  }
+  else if (side === 'L') {
+    this.y += 12
+    this.finalPosition = this.x - (TILE_SIZE * 2)
+  }
+  this.setDetonation()
+}
+
+function flingDown (this:Bomb, state:GameState) {
+  this.y += BOMB_SPEED
+  if (this.y > 180) {
+    this.y = 0
+    this.finalPosition = 16
+  }
+  else if (this.y >= this.finalPosition) {
+    if (!state.blocks.getBlock(this.getAxes())) {
+      this.stopMove(state)
+    }
+  }
+}
+
+function flingUp (this:Bomb, state:GameState) {
+  this.y -= BOMB_SPEED
+  if (this.y < 8) {
+    this.y = 192
+    this.finalPosition = 176
+  }
+  else if (this.y <= this.finalPosition) {
+    if (!state.blocks.getBlock(this.getAxes())) {
+      this.stopMove(state)
+    }
+  }
+}
+
+function flingRight (this:Bomb, state:GameState) {
+  this.x += BOMB_SPEED
+  if (this.x > 212) {
+    this.x = 0
+    this.finalPosition = 16
+  }
+  else if (this.x >= this.finalPosition) {
+    if (!state.blocks.getBlock(this.getAxes())) {
+      this.stopMove(state)
+    }
+  }
+}
+
+function flingLeft (this:Bomb, state:GameState) {
+  this.x -= BOMB_SPEED
+  if (this.x < 12) {
+    this.x = 224
+    this.finalPosition = 208
+  }
+  else if (this.x <= this.finalPosition) {
+    if (!state.blocks.getBlock(this.getAxes())) {
+      this.stopMove(state)
+    }
+  }
+}
+
 function tick (this:Bomb, state:GameState) {
   if (this.detonated) {
     this.checkPlayerCollision(state)
@@ -280,7 +387,14 @@ function tick (this:Bomb, state:GameState) {
   else if (this.moving) {
     this.moves[this.side](state)
   }
-  else if (this.armed) {
+  else if (this.flinging) {
+    this.flings[this.side](state)
+  }
+  else if (this.holding) {
+    this.x = state.players.players[this.playerIndex].x
+    this.y = state.players.players[this.playerIndex].y - 9
+  }
+  if (this.armed) {
     if (this.collidable) {
       if (isColliding(state.players.myself!, this)) {
         if (state.players.myself!.kick) {

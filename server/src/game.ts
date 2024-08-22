@@ -1,5 +1,5 @@
 import { Server } from 'socket.io'
-import { KillDTO, MoveBombDTO, MoveDTO, NullifyBlockDTO, PlaceBombDTO } from '#/dto'
+import { FlingBombDTO, HoldBombDTO, KillDTO, MoveBombDTO, MoveDTO, NullifyBlockDTO, PlaceBombDTO } from '#/dto'
 import { Socket } from '~/extends'
 
 export function onMove (io:Server, socket:Socket, dto:MoveDTO) {
@@ -15,6 +15,16 @@ export function onPlaceBomb (io:Server, socket:Socket, dto:PlaceBombDTO) {
 export function onMoveBomb (io:Server, socket:Socket, dto:MoveBombDTO) {
   dto.p = socket.data.index
   io.to(socket.data.roomId).emit('mb', dto)
+}
+
+export function onHoldBomb (io:Server, socket:Socket, dto:HoldBombDTO) {
+  dto.p = socket.data.index
+  io.to(socket.data.roomId).emit('hb', dto)
+}
+
+export function onFlingBomb (io:Server, socket:Socket, dto:FlingBombDTO) {
+  dto.p = socket.data.index
+  io.to(socket.data.roomId).emit('fb', dto)
 }
 
 export function onNullifyBlock (io:Server, socket:Socket, dto:NullifyBlockDTO) {

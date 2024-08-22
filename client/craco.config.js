@@ -1,10 +1,11 @@
-const path = require('path')
+const { homedir } = require('node:os')
+const { join, resolve } = require('node:path')
 
 module.exports = {
   webpack: {
     alias: {
-      '~': path.resolve(__dirname, 'src'),
-      '#': path.resolve(__dirname, '..', 'shared')
+      '~': resolve(__dirname, 'src'),
+      '#': resolve(__dirname, '..', 'shared')
     },
     configure: webpackConfig => {
       const scopePluginIndex = webpackConfig.resolve.plugins.findIndex(
@@ -15,6 +16,9 @@ module.exports = {
     }
   },
   devServer: {
-    https: true
+    https: {
+      cert: join(homedir(), '.ssl', 'cert.pem'),
+      key: join(homedir(), '.ssl', 'key.pem')
+    }
   }
 }

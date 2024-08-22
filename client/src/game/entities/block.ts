@@ -2,9 +2,19 @@ import { SPEED, TILE_SIZE } from '#/constants'
 import { BlockDTO } from '#/dto'
 import { animate, AnimControl } from '~/game/animations/animation'
 import { BLOCK } from '~/game/animations/block'
+import { Bomb } from '~/game/entities/bomb'
 import { Bonus, BonusFactory } from '~/game/entities/bonus'
 import { GameState } from '~/game/entities/state'
 import { isColliding, stopPlayer } from '~/game/util/collision'
+
+export interface Blocks {
+  blocks : (Block|Bonus|BombBlock|null)[][]
+  getBlock     : (axes:[number,number]) => Block|Bonus|BombBlock|null
+  destroyBlock : (axes:[number,number], state:GameState) => void
+  putBomb      : (bomb:Bomb) => void
+  tick         : (state:GameState) => void
+  render       : (context:CanvasRenderingContext2D, state:GameState) => void
+}
 
 interface Block extends BlockDTO {
   anim        : AnimControl['anim']
@@ -16,13 +26,11 @@ interface Block extends BlockDTO {
   render  : (context:CanvasRenderingContext2D, state:GameState) => void
 }
 
-export interface Blocks {
-  blocks : (Block|Bonus|null)[][]
-  getBlock     : (axes:[number,number]) => Block|Bonus|null
-  destroyBlock : (axes:[number,number], state:GameState) => void
-  occupyBlock  : (axes:[number,number]) => void
-  tick         : (state:GameState) => void
-  render       : (context:CanvasRenderingContext2D, state:GameState) => void
+interface BombBlock {
+  id : string
+  t  : 'O'
+  tick   : () => void
+  render : () => void
 }
 
 const TOLERANCE_UP = 8
@@ -50,13 +58,13 @@ export function BlocksFactory (blocksDto : (BlockDTO|null)[][]) : Blocks {
   }))
   const getBlock = getOneBlock.bind(blocks)
   const destroyBlock = nullifyBlock.bind(blocks)
-  const occupyBlock = occupyOneBlock.bind(blocks)
+  const putBomb = putOneBomb.bind(blocks)
   const tick = tickPlayer.bind(blocks)
   const render = renderBlocks.bind(blocks)
-  return { blocks, getBlock, destroyBlock, occupyBlock, tick, render }
+  return { blocks, getBlock, destroyBlock, putBomb, tick, render }
 }
 
-function getOneBlock (this:Blocks['blocks'], axes:[number,number]) : Block|Bonus|null {
+function getOneBlock (this:Blocks['blocks'], axes:[number,number]) : Block|Bonus|BombBlock|null {
   return this[axes[0]][axes[1]]
 }
 
@@ -67,10 +75,10 @@ function startDestroyBlock (this:Block) {
 }
 
 function nullifyBlock (this:Blocks['blocks'], axes:[number,number], state:GameState) {
-  const block = this[axes[0]][axes[1]]
-  if (block && (block as Block).b) {
+  const block = this[axes[0]][axes[1]] as Block
+  if (block && block.b) {
     this[axes[0]][axes[1]] = BonusFactory({
-      axes, bonus:(block as Block).b!, state, x:block.x, y:block.y
+      axes, bonus:block.b, state, x:block.x, y:block.y
     })
   }
   else {
@@ -78,9 +86,15 @@ function nullifyBlock (this:Blocks['blocks'], axes:[number,number], state:GameSt
   }
 }
 
-function occupyOneBlock (this:Blocks['blocks'], axes:[number,number]) {
-  // @ts-ignore
-  this[axes[0]][axes[1]] = {tick: () => {}, render: () => {}}
+function putOneBomb (this:Blocks['blocks'], bomb:Bomb) {
+  const b:BombBlock = {
+    id: bomb.id,
+    t: 'O',
+    tick: () => {},
+    render: () => {}
+  }
+  const [ax, ay] = bomb.getAxes()
+  this[ax][ay] = b
 }
 
 function tickD (this:Block, state:GameState) : boolean {

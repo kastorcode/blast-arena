@@ -1,8 +1,8 @@
 import { TILE_SIZE } from '#/constants'
-import { KillDTO, MoveDTO, PlaceBombDTO, PlayerDTO, SIDES } from '#/dto'
+import { FlingBombDTO, HoldBombDTO, KillDTO, MoveDTO, PlaceBombDTO, PlayerDTO, SIDES } from '#/dto'
 import { animate, AnimControl } from '~/game/animations/animation'
 import { PLAYER_D, PLAYER_DH, PLAYER_K, PLAYER_L, PLAYER_LH, PLAYER_R, PLAYER_RH, PLAYER_U, PLAYER_UH } from '~/game/animations/player'
-import { BombFactory } from '~/game/entities/bomb'
+import { Bomb, BombFactory } from '~/game/entities/bomb'
 import { GamepadFactory } from '~/game/entities/gamepad'
 import { GameState } from '~/game/entities/state'
 import socket from '~/services/socket'
@@ -16,9 +16,11 @@ interface PlayerProps extends PlayerDTO {
 
 export interface Player {
   anim       : AnimControl['anim']
+  bombId     : string
   bombReach  : number
   bombs      : number
   collidable : boolean
+  hold       : boolean
   holding    : 0|1
   index      : number
   kick       : boolean
@@ -42,7 +44,10 @@ export interface Player {
   onMove               : (dto:MoveDTO) => void
   stopMove             : (side:SIDES) => void
   invertControls       : () => void
+  handleBomb           : (state:GameState) => void
   placeBomb            : (state:GameState) => void
+  holdBomb             : (state:GameState) => void
+  flingBomb            : (state:GameState) => void
   kill                 : (emit:boolean, state:GameState) => void
   tick                 : (state:GameState) => void
   render               : (context:CanvasRenderingContext2D) => void
@@ -76,6 +81,7 @@ export function PlayerFactory (props:PlayerProps) : Player {
     bombReach: 2,
     bombs: 1,
     collidable: true,
+    hold: false,
     holding: 0,
     index: props.index,
     kick: false,
@@ -100,7 +106,10 @@ export function PlayerFactory (props:PlayerProps) : Player {
   player.onMove = onMove.bind(player)
   player.stopMove = stopMove.bind(player)
   player.invertControls = invertControls.bind(player)
+  player.handleBomb = handleBomb.bind(player)
   player.placeBomb = placeBomb.bind(player)
+  player.holdBomb = holdBomb.bind(player)
+  player.flingBomb = flingBomb.bind(player)
   player.kill = kill.bind(player)
   player.tick = tick.bind(player)
   player.render = render.bind(player)
@@ -142,7 +151,7 @@ function keydownListener (this:Player, event:KeyboardEvent, state:GameState) {
   if (this.removeTime) return
   const key = event.key.toUpperCase()
   if (MOVE_KEYS[key]) this.startMove(MOVE_KEYS[key])
-  if (BOMB_KEYS[key]) this.placeBomb(state)
+  if (BOMB_KEYS[key]) this.handleBomb(state)
 }
 
 function keyupListener (this:Player, event:KeyboardEvent) {
@@ -266,13 +275,26 @@ function invertControls () {
   MOVE_KEYS['ARROWRIGHT'] = 'L'
 }
 
+function handleBomb (this:Player, state:GameState) {
+  if (this.hold) {
+    if (this.holding) {
+      this.flingBomb(state)
+    }
+    else {
+      this.holdBomb(state)
+    }
+  }
+  else {
+    this.placeBomb(state)
+  }
+}
+
 function placeBomb (this:Player, state:GameState) {
   if (!this.bombs) return
   const axes = this.getAxes()
   const block = state.blocks.getBlock(axes)
   if (block) return
   this.bombs--
-  state.blocks.occupyBlock(axes)
   const bomb = BombFactory({
     axes,
     player     : this,
@@ -280,8 +302,9 @@ function placeBomb (this:Player, state:GameState) {
     reach      : this.bombReach,
     state
   })
+  state.blocks.putBomb(bomb)
   const dto:PlaceBombDTO = {
-    a: bomb.axes,
+    a: axes,
     i: bomb.id,
     p: bomb.playerIndex,
     r: bomb.reach,
@@ -290,6 +313,29 @@ function placeBomb (this:Player, state:GameState) {
   }
   socket.emit('pb', dto)
   state.entities.add(bomb)
+}
+
+function holdBomb (this:Player, state:GameState) {
+  const block = state.blocks.getBlock(this.getAxes())
+  if (block && block.t === 'O') {
+    this.holding = 1
+    this.bombId = block.id
+    const bomb = state.entities.get(block.id) as Bomb
+    const dto:HoldBombDTO = {i:bomb.id,p:this.index}
+    socket.emit('hb', dto)
+    bomb.setHolding(this.index, state)
+  }
+  else {
+    this.placeBomb(state)
+  }
+}
+
+function flingBomb (this:Player, state:GameState) {
+  this.holding = 0
+  const bomb = state.entities.get(this.bombId) as Bomb
+  const dto:FlingBombDTO = {i:bomb.id,p:this.index,s:this.side,x:this.x,y:this.y-9}
+  socket.emit('fb', dto)
+  bomb.startFling(this.side)
 }
 
 function kill (this:Player, emit:boolean, state:GameState) {
