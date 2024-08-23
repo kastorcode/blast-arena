@@ -45,8 +45,14 @@ export default function Canvas () {
     context?.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height)
     state?.stage.render(context!)
     state?.blocks.render(context!, state)
-    state?.players.render(context!)
-    state?.entities.render(context!)
+    if (state!.players.players.find(p => p.holding)) {
+      state?.players.render(context!)
+      state?.entities.render(context!)
+    }
+    else {
+      state?.entities.render(context!)
+      state?.players.render(context!)
+    }
   }
 
   function startGame (dto:StartGameDTO) {
@@ -96,6 +102,7 @@ export default function Canvas () {
     const bomb = state!.entities.get(dto.i) as Bomb
     bomb.x = dto.x
     bomb.y = dto.y
+    state!.players.players[dto.p].holding = 0
     bomb.startFling(dto.s)
   }
 

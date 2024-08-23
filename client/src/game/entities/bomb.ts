@@ -99,7 +99,12 @@ function setDetonation (this:Bomb, multiplier=1) {
 }
 
 function detonate (this:Bomb, state:GameState) {
-  if (this.holding) this.stopMove(state)
+  if (this.holding) {
+    if (this.playerIndex === state.players.myself!.index) {
+      state.players.myself!.kill(true, state)
+    }
+    this.stopMove(state)
+  }
   this.armed = false
   this.detonated = true
   const [ax, ay] = this.getAxes()

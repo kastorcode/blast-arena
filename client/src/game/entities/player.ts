@@ -341,6 +341,9 @@ function flingBomb (this:Player, state:GameState) {
 function kill (this:Player, emit:boolean, state:GameState) {
   if (this.removeTime) return
   this.removeTime = Date.now() + 350
+  this.moving = 0
+  this.holding = 0
+  this.collidable = false
   this.tick = () => {
     if (Date.now() > this.removeTime) {
       this.tick = () => {}

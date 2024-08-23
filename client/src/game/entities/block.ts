@@ -87,13 +87,15 @@ function nullifyBlock (this:Blocks['blocks'], axes:[number,number], state:GameSt
 }
 
 function putOneBomb (this:Blocks['blocks'], bomb:Bomb) {
+  const [ax, ay] = bomb.getAxes()
+  const block = this[ax][ay]
+  if (block && block.t === 'I') return
   const b:BombBlock = {
     id: bomb.id,
     t: 'O',
     tick: () => {},
     render: () => {}
   }
-  const [ax, ay] = bomb.getAxes()
   this[ax][ay] = b
 }
 
