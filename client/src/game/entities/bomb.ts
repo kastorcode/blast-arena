@@ -261,9 +261,6 @@ function stopMove (this:Bomb, state:GameState) {
   this.x = Math.round(this.x / TILE_SIZE) * TILE_SIZE
   this.y = Math.round(this.y / TILE_SIZE) * TILE_SIZE
   state.blocks.putBomb(this)
-  if (!isColliding(state.players.myself!, this)) {
-    this.collidable = true
-  }
 }
 
 function moveDown (this:Bomb, state:GameState) {
@@ -410,8 +407,10 @@ function tick (this:Bomb, state:GameState) {
         stopPlayer(state.players.myself!, this)
       }
     }
-    else if (!isColliding(state.players.myself as Player, this)) {
-      this.collidable = true
+    else if (!isColliding(state.players.myself!, this)) {
+      if (!this.moving && !this.flinging) {
+        this.collidable = true
+      }
     }
     if (Date.now() > this.detonateTime) {
       if (this.player) this.player.bombs++

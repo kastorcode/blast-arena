@@ -1,3 +1,4 @@
+import { PRESS_INTERVAL } from '#/constants'
 import { SIDES } from '#/dto'
 import { Player } from '~/game/entities/player'
 import { GameState } from '~/game/entities/state'
@@ -23,6 +24,10 @@ const MOVE_KEYS:{[key:number]:SIDES} = {
 
 const BOMB_KEYS:{[key:number]:'B'} = {
   0:'B', 1:'B', 2:'B', 3:'B'
+}
+
+const LAST_PRESS:{[key:string]:number} = {
+  BOMB:0
 }
 
 export function GamepadFactory (props:GamepadProps) : GamepadHost {
@@ -58,7 +63,12 @@ function tick (this:GamepadHost, state:GameState) {
     else                             this.player.stopMove(this.player.side)
   }
   for (const key in BOMB_KEYS) {
-    if (gamepad.buttons[key].pressed) this.player.placeBomb(state)
+    if (gamepad.buttons[key].pressed) {
+      if (Date.now() > LAST_PRESS.BOMB) {
+        LAST_PRESS.BOMB = Date.now() + PRESS_INTERVAL
+        this.player.handleBomb(state)
+      }
+    }
   }
 }
 

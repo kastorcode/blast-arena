@@ -1,4 +1,4 @@
-import { TILE_SIZE } from '#/constants'
+import { PRESS_INTERVAL, TILE_SIZE } from '#/constants'
 import { FlingBombDTO, HoldBombDTO, KillDTO, MoveDTO, PlaceBombDTO, PlayerDTO, SIDES } from '#/dto'
 import { animate, AnimControl } from '~/game/animations/animation'
 import { PLAYER_D, PLAYER_DH, PLAYER_K, PLAYER_L, PLAYER_LH, PLAYER_R, PLAYER_RH, PLAYER_U, PLAYER_UH } from '~/game/animations/player'
@@ -73,6 +73,10 @@ const MOVE_KEYS : {[key:string]:SIDES} = {
 
 const MOVING : {[key in SIDES]:boolean} = {
   U:false, L:false, D:false, R:false
+}
+
+const LAST_PRESS:{[key:string]:number} = {
+  BOMB:0
 }
 
 export function PlayerFactory (props:PlayerProps) : Player {
@@ -150,8 +154,15 @@ function keydownListener (this:Player, event:KeyboardEvent, state:GameState) {
   event.preventDefault()
   if (this.removeTime) return
   const key = event.key.toUpperCase()
-  if (MOVE_KEYS[key]) this.startMove(MOVE_KEYS[key])
-  if (BOMB_KEYS[key]) this.handleBomb(state)
+  if (MOVE_KEYS[key]) {
+    this.startMove(MOVE_KEYS[key])
+  }
+  if (BOMB_KEYS[key]) {
+    if (Date.now() > LAST_PRESS.BOMB) {
+      LAST_PRESS.BOMB = Date.now() + PRESS_INTERVAL
+      this.handleBomb(state)
+    }
+  }
 }
 
 function keyupListener (this:Player, event:KeyboardEvent) {
