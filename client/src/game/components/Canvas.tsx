@@ -6,6 +6,7 @@ import { EntitiesFactory } from '~/game/entities/factory'
 import { PlayersFactory } from '~/game/entities/players'
 import { StageFactory } from '~/game/entities/stage'
 import { GameState } from '~/game/entities/state'
+import { playBombSound } from '~/game/sound/bomb'
 import socket from '~/services/socket'
 
 export default function Canvas () {
@@ -82,6 +83,7 @@ export default function Canvas () {
       x: dto.x,
       y: dto.y
     }))
+    playBombSound()
   }
 
   function onMoveBomb (dto:MoveBombDTO) {

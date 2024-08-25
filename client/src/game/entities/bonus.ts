@@ -2,12 +2,13 @@ import { MAX_SPEED, SPEED, TILE_SIZE } from '#/constants'
 import { NullifyBlockDTO } from '#/dto'
 import { PassFactory } from '~/game/entities/pass'
 import { GameState } from '~/game/entities/state'
+import { playBonusSound } from '~/game/sound/bonus'
 import { isCollidingForced } from '~/game/util/collision'
 import socket from '~/services/socket'
 
 interface BonusProps {
   axes  : [number, number]
-  bonus : number
+  bonus : keyof typeof BONUS
   state : GameState
   x     : number
   y     : number
@@ -15,7 +16,7 @@ interface BonusProps {
 
 export interface Bonus {
   axes   : [number, number]
-  bonus  : number
+  bonus  : keyof typeof BONUS
   sprite : HTMLImageElement
   t      : 'B'
   x      : number
@@ -24,7 +25,7 @@ export interface Bonus {
   render : (context:CanvasRenderingContext2D) => void
 }
 
-const BONUS:{[key:number]:(props:BonusProps) => Bonus} = {
+const BONUS = {
   1:BombBonus,
   2:BlastBonus,
   3:HoldBonus,
@@ -236,6 +237,7 @@ function collided (state:GameState, bonus:Bonus, callback:()=>void) {
   if (isCollidingForced(state.players.myself!, bonus)) {
     const dto:NullifyBlockDTO = {a:bonus.axes}
     socket.emit('nb', dto)
+    playBonusSound(bonus.bonus)
     state.blocks.destroyBlock(bonus.axes, state)
     callback()
   }

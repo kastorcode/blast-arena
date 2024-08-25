@@ -89,7 +89,7 @@ function bonusFactory (blocks:(BlockDTO|null)[][]) : (BlockDTO|null)[][] {
   for (let bonus = 1; bonus < BONUSES.length; bonus++) {
     for (let quantity = BONUSES[bonus]; quantity > 0; quantity--) {
       const where = Math.floor(Math.random() * positions.length)
-      blocks[positions[where][0]][positions[where][1]]!.b = bonus
+      blocks[positions[where][0]][positions[where][1]]!.b = bonus as BlockDTO['b']
       positions.splice(where, 1)
     }
   }

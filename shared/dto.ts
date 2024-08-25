@@ -1,10 +1,10 @@
 export type SIDES = 'U'|'L'|'D'|'R' // player side: up, left, down, right
 
 export interface BlockDTO {
-  b ?: number  // bonus item id
-  t  : 'D'|'I' // block type: desctructible or indestructible
-  x  : number  // block x position
-  y  : number  // block y position
+  b ?: 1|2|3|4|5|6|7|8 // bonus item id
+  t  : 'D'|'I'         // block type: desctructible or indestructible
+  x  : number          // block x position
+  y  : number          // block y position
 }
 
 export interface FlingBombDTO {

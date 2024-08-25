@@ -5,6 +5,8 @@ import { PLAYER_D, PLAYER_DH, PLAYER_K, PLAYER_L, PLAYER_LH, PLAYER_R, PLAYER_RH
 import { Bomb, BombFactory } from '~/game/entities/bomb'
 import { GamepadFactory } from '~/game/entities/gamepad'
 import { GameState } from '~/game/entities/state'
+import { playBombSound } from '~/game/sound/bomb'
+import { playKillSound } from '~/game/sound/kill'
 import socket from '~/services/socket'
 
 interface PlayerProps extends PlayerDTO {
@@ -324,6 +326,7 @@ function placeBomb (this:Player, state:GameState) {
   }
   socket.emit('pb', dto)
   state.entities.add(bomb)
+  playBombSound()
 }
 
 function holdBomb (this:Player, state:GameState) {
@@ -365,6 +368,7 @@ function kill (this:Player, emit:boolean, state:GameState) {
     const { sx, sy } = animate(this, PLAYER_K)
     context.drawImage(this.sprite, sx, sy, PLAYER_K.FRAME_WIDTH, PLAYER_K.FRAME_HEIGHT, this.x, this.y, PLAYER_K.FRAME_WIDTH, PLAYER_K.FRAME_HEIGHT)
   }
+  playKillSound()
   if (!emit) return
   this.removeGamepadSupport(state)
   const dto:KillDTO = {p:this.index}

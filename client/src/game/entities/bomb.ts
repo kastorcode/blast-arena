@@ -5,6 +5,9 @@ import { BOMB } from '~/game/animations/bomb'
 import { Blast, BlastFactory, Directions } from '~/game/entities/blast'
 import { Player } from '~/game/entities/player'
 import { GameState } from '~/game/entities/state'
+import { playBlastSound } from '~/game/sound/blast'
+import { playFlingSound } from '~/game/sound/fling'
+import { playKickSound } from '~/game/sound/kick'
 import { isColliding, stopPlayer } from '~/game/util/collision'
 import socket from '~/services/socket'
 
@@ -99,6 +102,7 @@ function setDetonation (this:Bomb, multiplier=1) {
 }
 
 function detonate (this:Bomb, state:GameState) {
+  playBlastSound()
   if (this.holding) {
     if (this.playerIndex === state.players.myself!.index) {
       state.players.myself!.kill(true, state)
@@ -230,6 +234,7 @@ function startMove (this:Bomb, side:SIDES, state:GameState) {
   }
   catch {}
   if (move) {
+    playKickSound()
     state.blocks.destroyBlock([ax, ay], state)
     this.collidable = false
     this.side = side
@@ -306,6 +311,7 @@ function setHolding (this:Bomb, playerIndex:number, state:GameState) {
 }
 
 function startFling (this:Bomb, side:SIDES) {
+  playFlingSound()
   this.holding = false
   this.collidable = false
   this.side = side
