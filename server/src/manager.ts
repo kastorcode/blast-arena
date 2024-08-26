@@ -1,6 +1,7 @@
 import { Server } from 'socket.io'
+import { ID_LENGTH } from '#/constants'
 import { UserDTO } from '#/dto'
-import { ID_LENGTH, MAX_PLAYERS, NICK } from '~/constants'
+import { MAX_PLAYERS, NICK } from '~/constants'
 import { Socket } from '~/extends'
 import { startGameFactory, updateLobbyFactory } from '~/factory'
 import { rooms } from '~/rooms'
@@ -23,7 +24,7 @@ export function createLobby (io : Server, socket : Socket) {
   if (io.sockets.adapter.rooms.has(lobbyId)) {
     return socket.emit('error', 'create_lobby_failed')
   }
-  return enterLobby(socket, lobbyId)
+  return enterLobby(io, socket, lobbyId)
 }
 
 export async function changeLobby (io : Server, socket : Socket, lobbyId : string) {
@@ -40,11 +41,7 @@ export async function changeLobby (io : Server, socket : Socket, lobbyId : strin
   if (lobby.has(socket.id)) {
     return socket.emit('error', 'already_in_lobby')
   }
-  await enterLobby(socket, lobbyId)
-  const dto = updateLobbyFactory(io, lobbyId)
-  if (dto) {
-    io.to(lobbyId).emit('update_lobby', dto)
-  }
+  await enterLobby(io, socket, lobbyId)
 }
 
 export async function joinRoom (io : Server, socket : Socket) {
@@ -55,6 +52,7 @@ export async function joinRoom (io : Server, socket : Socket) {
   if (!lobby) {
     return socket.emit('error', 'lobby_not_found')
   }
+  io.to(socket.data.lobbyId).emit('open_game')
   const players = getLobbyPlayers(io, lobby)
   if (players.length === MAX_PLAYERS) {
     return lobbyToRoom(io, socket, players)
@@ -70,10 +68,14 @@ export function onDisconnect (io : Server, socket : Socket) {
   deleteGameState(io, socket)
 }
 
-async function enterLobby (socket : Socket, lobbyId : string) {
+async function enterLobby (io:Server, socket:Socket, lobbyId:string) {
   await socket.leave(socket.data.lobbyId)
   await socket.join(lobbyId)
   socket.data.lobbyId = lobbyId
+  const dto = updateLobbyFactory(io, lobbyId)
+  if (dto) {
+    io.to(lobbyId).emit('update_lobby', dto)
+  }
 }
 
 function getLobbyPlayers (io : Server, lobby : Set<string>) {

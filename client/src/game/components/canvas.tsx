@@ -162,8 +162,6 @@ export default function Canvas () {
     if (!context2d) return
     context2d.imageSmoothingEnabled = false
     setContext(context2d)
-    socket.emit('create_lobby')
-    setTimeout(() => socket.emit('join_room'), 1000)
   })
 
   return (

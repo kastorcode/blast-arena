@@ -1,8 +1,7 @@
 import '~/index.css'
 import { useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { UserDTO } from '#/dto'
-import GameApp from '~/game/components/App'
+import { LobbyDTO, UserDTO } from '#/dto'
 import useBoot from '~/hooks/useBoot'
 import randomuser from '~/services/randomuser'
 import socket from '~/services/socket'
@@ -10,11 +9,16 @@ import { updateLobby } from '~/store/lobby/actions'
 import { setUserNick } from '~/store/user/actions'
 import { saveUser } from '~/store/user/thunk'
 
-export default function App () {
+interface SiteAppProps {
+  children : JSX.Element
+}
+
+export default function SiteApp ({ children } : SiteAppProps) {
 
   const dispatch = useDispatch()
   const booting = useBoot(dispatch)
   const user = useSelector<any,UserDTO>(state => state.user)
+  const lobby = useSelector<any,LobbyDTO|null>(state => state.lobby)
 
   useEffect(() => {
     if (booting || user.nick) return
@@ -34,6 +38,11 @@ export default function App () {
   }, [user])
 
   useEffect(() => {
+    if (lobby) return
+    socket.emit('create_lobby')
+  }, [lobby])
+
+  useEffect(() => {
     socket.on('error', console.error)
     socket.on('update_lobby', lobby => dispatch(updateLobby(lobby)))
     return () => {
@@ -42,8 +51,6 @@ export default function App () {
     }
   }, [])
 
-  return (
-    <GameApp />
-  )
+  return children
 
 }

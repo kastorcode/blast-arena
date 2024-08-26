@@ -1,4 +1,4 @@
-import { ID_LENGTH } from '~/constants'
+import { ID_LENGTH } from '#/constants'
 
 export function generateId (length = ID_LENGTH) : string {
   const c = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'

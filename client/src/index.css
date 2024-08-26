@@ -1,6 +1,61 @@
+@import url('https://fonts.googleapis.com/css2?family=Comfortaa:wght@400..700&display=swap');
+
+* {
+  border: none;
+  box-sizing: border-box;
+  color: #fff;
+  font-family: "Comfortaa", sans-serif;
+  font-size: 16px;
+  font-weight: 400;
+  margin: 0;
+  padding: 0;
+  text-decoration: none;
+}
+
+body, #root {
+  align-items: center;
+  display: flex;
+  height: 100svh;
+  justify-content: center;
+  width: 100%;
+}
+
+button, input[type="submit"] {
+  background-color: rgb(0,0,255);
+  clip-path: polygon(10% 0, 100% 0, 90% 100%, 0 100%);
+  color: rgb(255,255,0);
+  font-weight: 700;
+  padding: 1rem;
+  transition: 0.2s;
+}
+
+button:hover, input[type="submit"]:hover {
+  background-color: rgb(255,255,0);
+  color: rgb(0,0,255);
+  cursor: pointer;
+}
+
 canvas {
   image-rendering: pixelated;
   image-rendering: -moz-crisp-edges;
   image-rendering: -o-crisp-edges;
   -ms-interpolation-mode: nearest-neighbor;
+}
+
+input[type="submit"] {
+  clip-path: none;
+}
+
+input[type="text"] {
+  background-color: rgba(255,255,255,0.8);
+  color: rgb(0,0,0);
+  font-weight: 700;
+  padding: 1rem;
+  transition: 0.2s;
+  width: 12rem;
+}
+
+input[type="text"]:focus {
+  border: none;
+  outline: none;
 }
