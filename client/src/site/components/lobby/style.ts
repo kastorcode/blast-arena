@@ -1,9 +1,5 @@
 import styled from 'styled-components'
 
-export const ChangeLobby = styled.button`
-  background-color: rgba(0,0,0,0);
-`
-
 export const Container = styled.div`
   align-items: center;
   background-color: rgba(0,0,255,0.8);
@@ -38,6 +34,10 @@ export const LobbyId = styled.button`
     padding: 1rem 7%;
     width: 81%;
   }
+`
+
+export const Options = styled.button`
+  background-color: rgba(0,0,0,0);
 `
 
 export const PlayBorder = styled.button`

@@ -7,6 +7,7 @@ import { PlayersFactory } from '~/game/entities/players'
 import { StageFactory } from '~/game/entities/stage'
 import { GameState } from '~/game/entities/state'
 import { playBombSound } from '~/game/sound/bomb'
+import useIsPortrait from '~/hooks/useIsPortrait'
 import socket from '~/services/socket'
 
 export default function Canvas () {
@@ -16,6 +17,7 @@ export default function Canvas () {
   const [context, setContext] = useState<CanvasRenderingContext2D>()
   const [myself, setMyself] = useState<number>()
   const [state, setState] = useState<GameState>()
+  const isPortrait = useIsPortrait()
 
   function gameLoop (timestamp : number) {
     try {
@@ -165,7 +167,10 @@ export default function Canvas () {
   })
 
   return (
-    <canvas ref={canvasRef} width={240} height={208} style={{ height: '85vh' }} />
+    <canvas
+      ref={canvasRef} width={240} height={208}
+      style={isPortrait ? {width:'100svw'} : {height:'100svh'}}
+    />
   )
 
 }

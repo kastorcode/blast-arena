@@ -19,8 +19,6 @@ export const CORS = {
 
 export const MAX_PLAYERS = 4
 
-export const NICK = { MIN: 2, MAX: 12 }
-
 export const PORT = 4000
 
 export function getSsl () {

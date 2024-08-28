@@ -2,15 +2,15 @@ import { useEffect } from 'react'
 import { LobbyDTO } from '#/dto'
 import socket from '~/services/socket'
 import { copyToClipboard, joinRoom } from './method'
-import { ChangeLobby, Container, LobbyContainer, LobbyId, Play, PlayBorder, Player, Players } from './style'
+import { Container, LobbyContainer, LobbyId, Options, Play, PlayBorder, Player, Players } from './style'
 
 interface LobbyProps {
-  lobby              : LobbyDTO
-  setShowChangeLobby : React.Dispatch<React.SetStateAction<boolean>>
-  setShowGame        : React.Dispatch<React.SetStateAction<boolean>>
+  lobby          : LobbyDTO
+  setShowGame    : React.Dispatch<React.SetStateAction<boolean>>
+  setShowOptions : React.Dispatch<React.SetStateAction<boolean>>
 }
 
-export default function Lobby ({ lobby, setShowChangeLobby, setShowGame } : LobbyProps) {
+export default function Lobby ({ lobby, setShowGame, setShowOptions } : LobbyProps) {
 
   function handleOpenGame () {
     socket.off('open_game', handleOpenGame)
@@ -30,7 +30,7 @@ export default function Lobby ({ lobby, setShowChangeLobby, setShowGame } : Lobb
     <Container>
       <LobbyContainer>
         <LobbyId onClick={() => copyToClipboard(lobby.lobbyId)}>{lobby.lobbyId}</LobbyId>
-        <ChangeLobby onClick={() => setShowChangeLobby(true)}>Change Lobby</ChangeLobby>
+        <Options onClick={() => setShowOptions(true)}>Options</Options>
       </LobbyContainer>
       <Players>
         {lobby.players.map(p => (

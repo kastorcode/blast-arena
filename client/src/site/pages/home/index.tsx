@@ -2,16 +2,16 @@ import { useState } from 'react'
 import { useSelector } from 'react-redux'
 import { LobbyDTO } from '#/dto'
 import GameApp from '~/game/components/gameApp'
-import ChangeLobby from '~/site/components/changeLobby'
 import Lobby from '~/site/components/lobby'
+import Options from '~/site/components/options'
 import SiteApp from '~/site/components/siteApp'
 import { Container } from './style'
 
 export default function HomePage () {
 
   const lobby = useSelector<any,LobbyDTO|null>(state => state.lobby)
-  const [showChangeLobby, setShowChangeLobby] = useState(false)
   const [showGame, setShowGame] = useState(false)
+  const [showOptions, setShowOptions] = useState(false)
 
   return (
     <SiteApp>
@@ -19,11 +19,11 @@ export default function HomePage () {
       <GameApp />
     ) : (
       <Container>
-      {showChangeLobby &&
-        <ChangeLobby setShowChangeLobby={setShowChangeLobby} />
+      {showOptions &&
+        <Options setShowOptions={setShowOptions} />
       }
-      {(lobby && !showChangeLobby) &&
-        <Lobby lobby={lobby} setShowChangeLobby={setShowChangeLobby} setShowGame={setShowGame} />
+      {(lobby && !showOptions) &&
+        <Lobby lobby={lobby} setShowGame={setShowGame} setShowOptions={setShowOptions} />
       }
       </Container>
     )}

@@ -1,6 +1,7 @@
 import '~/index.css'
 import { useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
+import { useSearchParams } from 'react-router-dom'
 import { LobbyDTO, UserDTO } from '#/dto'
 import useBoot from '~/hooks/useBoot'
 import randomuser from '~/services/randomuser'
@@ -17,6 +18,7 @@ export default function SiteApp ({ children } : SiteAppProps) {
 
   const dispatch = useDispatch()
   const booting = useBoot(dispatch)
+  const [searchParams] = useSearchParams()
   const user = useSelector<any,UserDTO>(state => state.user)
   const lobby = useSelector<any,LobbyDTO|null>(state => state.lobby)
 
@@ -39,7 +41,13 @@ export default function SiteApp ({ children } : SiteAppProps) {
 
   useEffect(() => {
     if (lobby) return
-    socket.emit('create_lobby')
+    const lobbyParam = searchParams.get('lobby')
+    if (lobbyParam) {
+      socket.emit('change_lobby', lobbyParam)
+    }
+    else {
+      socket.emit('create_lobby')
+    }
   }, [lobby])
 
   useEffect(() => {
@@ -49,7 +57,7 @@ export default function SiteApp ({ children } : SiteAppProps) {
       socket.off('error', console.error)
       socket.off('update_lobby', lobby => dispatch(updateLobby(lobby)))
     }
-  }, [])
+  })
 
   return children
 
