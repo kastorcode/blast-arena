@@ -1,9 +1,11 @@
 import { useEffect, useRef } from 'react'
-import { useDispatch } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
 import { ID_LENGTH, NICK } from '#/constants'
+import { setTouchControls } from '~/store/options/actions'
+import { OptionsDTO } from '~/store/options/reducer'
 import { setUserNick } from '~/store/user/actions'
 import { submitChangeLobby } from './method'
-import { CloseOptions, Container, FormContainer } from './style'
+import { CloseOptions, Container, FormContainer, Off, On, TouchControlsContainer } from './style'
 
 interface OptionsProps {
   setShowOptions : React.Dispatch<React.SetStateAction<boolean>>
@@ -13,6 +15,7 @@ export default function Options ({ setShowOptions } : OptionsProps) {
 
   const lobbyIdRef = useRef<HTMLInputElement>(null)
   const nickRef = useRef<HTMLInputElement>(null)
+  const options = useSelector<any,OptionsDTO>(state => state.options)
   const dispatch = useDispatch()
 
   function handleChangeLobby (event:React.FormEvent<HTMLFormElement>) {
@@ -31,10 +34,6 @@ export default function Options ({ setShowOptions } : OptionsProps) {
     dispatch(setUserNick(value))
   }
 
-  useEffect(() => {
-    lobbyIdRef.current!.focus()
-  })
-
   return (
     <Container>
       <CloseOptions onClick={() => setShowOptions(false)}>Close</CloseOptions>
@@ -47,6 +46,10 @@ export default function Options ({ setShowOptions } : OptionsProps) {
           <input ref={nickRef} type='text' placeholder='new nick' maxLength={NICK.MAX} minLength={NICK.MIN} />
           <input type='submit' value='Replace' />
         </form>
+        <TouchControlsContainer onClick={() => dispatch(setTouchControls())}>
+          <label>Touch Controls</label>
+          {options.touchControls ? <On>ON</On> : <Off>OFF</Off>}
+        </TouchControlsContainer>
       </FormContainer>
     </Container>
   )

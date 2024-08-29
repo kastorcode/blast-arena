@@ -7,6 +7,8 @@ import useBoot from '~/hooks/useBoot'
 import randomuser from '~/services/randomuser'
 import socket from '~/services/socket'
 import { updateLobby } from '~/store/lobby/actions'
+import { OptionsDTO } from '~/store/options/reducer'
+import { saveOptions } from '~/store/options/thunk'
 import { setUserNick } from '~/store/user/actions'
 import { saveUser } from '~/store/user/thunk'
 
@@ -19,8 +21,9 @@ export default function SiteApp ({ children } : SiteAppProps) {
   const dispatch = useDispatch()
   const booting = useBoot(dispatch)
   const [searchParams] = useSearchParams()
-  const user = useSelector<any,UserDTO>(state => state.user)
   const lobby = useSelector<any,LobbyDTO|null>(state => state.lobby)
+  const options = useSelector<any,OptionsDTO>(state => state.options)
+  const user = useSelector<any,UserDTO>(state => state.user)
 
   useEffect(() => {
     if (booting || user.nick) return
@@ -38,6 +41,11 @@ export default function SiteApp ({ children } : SiteAppProps) {
     socket.emit('set_user', user)
     saveUser()
   }, [user])
+
+  useEffect(() => {
+    if (booting || !options) return
+    saveOptions()
+  }, [options])
 
   useEffect(() => {
     if (lobby) return

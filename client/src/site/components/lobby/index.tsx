@@ -33,8 +33,8 @@ export default function Lobby ({ lobby, setShowGame, setShowOptions } : LobbyPro
         <Options onClick={() => setShowOptions(true)}>Options</Options>
       </LobbyContainer>
       <Players>
-        {lobby.players.map(p => (
-          <Player>{p.nick}</Player>
+        {lobby.players.map((p,i) => (
+          <Player key={`${i}${p.nick}`}>{p.nick}</Player>
         ))}
       </Players>
     </Container>
