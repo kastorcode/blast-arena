@@ -42,11 +42,7 @@ export const Options = styled.button`
 
 export const PlayBorder = styled.button`
   background-color: rgb(255,255,0);
-  left: 50%;
   padding: 0.3rem;
-  position: absolute;
-  translate: -50% -50%;
-  top: 50%;
 `
 
 export const Play = styled.div`
@@ -58,6 +54,18 @@ export const Play = styled.div`
   ${PlayBorder}:hover & {
     background-color: rgb(255,255,0);
     color: rgb(23,11,42);
+  }
+`
+
+export const PlayContainer = styled.div`
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  max-width: 192px;
+  width: 100%;
+  & > *:not(:last-child) {
+    margin-bottom: 1.5rem;
   }
 `
 

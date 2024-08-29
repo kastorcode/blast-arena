@@ -19,7 +19,7 @@ export function loadOptions () {
   const options = {...dto}
   Object.keys(dto).forEach(key => {
     // @ts-ignore
-    if (parsed[key]) options[key] = parsed[key]
+    if (parsed[key] !== undefined) options[key] = parsed[key]
   })
   return options
 }

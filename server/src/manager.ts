@@ -1,6 +1,6 @@
 import { Server } from 'socket.io'
 import { ID_LENGTH, NICK } from '#/constants'
-import { UserDTO } from '#/dto'
+import { JoinRoomDTO, UserDTO } from '#/dto'
 import { MAX_PLAYERS } from '~/constants'
 import { Socket } from '~/extends'
 import { startGameFactory, updateLobbyFactory } from '~/factory'
@@ -44,7 +44,7 @@ export async function changeLobby (io : Server, socket : Socket, lobbyId : strin
   await enterLobby(io, socket, lobbyId)
 }
 
-export async function joinRoom (io : Server, socket : Socket) {
+export async function joinRoom (io:Server, socket:Socket, dto:JoinRoomDTO) {
   if (socket.data.isPairing) {
     return socket.emit('error', 'already_pairing')
   }
@@ -54,7 +54,7 @@ export async function joinRoom (io : Server, socket : Socket) {
   }
   io.to(socket.data.lobbyId).emit('open_game')
   const players = getLobbyPlayers(io, lobby)
-  if (players.length === MAX_PLAYERS) {
+  if (!dto.fillRoom || players.length === MAX_PLAYERS) {
     return lobbyToRoom(io, socket, players)
   }
   const found = await findRoom(io, players)

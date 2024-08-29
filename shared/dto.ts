@@ -28,6 +28,10 @@ export interface HoldBombDTO {
   p : number // player index
 }
 
+export interface JoinRoomDTO {
+  fillRoom : boolean
+}
+
 export interface KillDTO {
   p : number // player index
 }

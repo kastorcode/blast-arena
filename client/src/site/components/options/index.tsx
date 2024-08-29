@@ -1,11 +1,12 @@
-import { useEffect, useRef } from 'react'
+import { useRef } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { ID_LENGTH, NICK } from '#/constants'
+import Toggle from '~/site/components/toggle'
 import { setTouchControls } from '~/store/options/actions'
 import { OptionsDTO } from '~/store/options/reducer'
 import { setUserNick } from '~/store/user/actions'
 import { submitChangeLobby } from './method'
-import { CloseOptions, Container, FormContainer, Off, On, TouchControlsContainer } from './style'
+import { CloseOptions, Container, FormContainer } from './style'
 
 interface OptionsProps {
   setShowOptions : React.Dispatch<React.SetStateAction<boolean>>
@@ -46,10 +47,9 @@ export default function Options ({ setShowOptions } : OptionsProps) {
           <input ref={nickRef} type='text' placeholder='new nick' maxLength={NICK.MAX} minLength={NICK.MIN} />
           <input type='submit' value='Replace' />
         </form>
-        <TouchControlsContainer onClick={() => dispatch(setTouchControls())}>
-          <label>Touch Controls</label>
-          {options.touchControls ? <On>ON</On> : <Off>OFF</Off>}
-        </TouchControlsContainer>
+        <Toggle on={options.touchControls} onClick={() => dispatch(setTouchControls())}>
+          Touch Controls
+        </Toggle>
       </FormContainer>
     </Container>
   )

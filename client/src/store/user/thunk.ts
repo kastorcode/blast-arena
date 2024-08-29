@@ -23,10 +23,10 @@ export function loadUser () {
   const item = localStorage.getItem(KEY)
   if (!item) return null
   const parsed = JSON.parse(item)
-  const user : UserDTO = {...dto}
+  const user:UserDTO = {...dto}
   Object.keys(dto).forEach(key => {
     // @ts-ignore
-    if (parsed[key]) user[key] = parsed[key]
+    if (parsed[key] !== undefined) user[key] = parsed[key]
   })
   return user
 }
