@@ -7,17 +7,28 @@ export const ActionContainer = styled.div`
   width: 100%;
 `
 
-export const Container = styled.div<{isPortrait:boolean}>`
+export const ButtonsContainer = styled.div<{isPortrait:boolean}>`
   align-items: center;
   bottom: ${({isPortrait}) => isPortrait ? '10%' : 'auto'};
   display: flex;
-  fill: #fff;
   height: 100%;
   justify-content: space-between;
   max-height: 192px;
-  opacity: 50%;
   padding: 0 2%;
   position: absolute;
+  width: 100%;
+`
+
+export const Container = styled.div`
+  align-items: center;
+  display: flex;
+  fill: #fff;
+  height: 100%;
+  justify-content: center;
+  left: 0;
+  opacity: 50%;
+  position: absolute;
+  top: 0;
   width: 100%;
 `
 

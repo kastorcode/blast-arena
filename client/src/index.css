@@ -12,16 +12,20 @@
   font-family: "Comfortaa", sans-serif;
   font-size: 16px;
   font-weight: 400;
+  line-height: 24px;
   margin: 0;
   padding: 0;
   text-decoration: none;
 }
 
+a:hover {
+  color: rgb(255,255,0);
+  cursor: pointer;
+  transition: 0.2s;
+}
+
 body, #root {
-  align-items: center;
-  display: flex;
   height: 100svh;
-  justify-content: center;
   width: 100%;
 }
 
@@ -49,6 +53,15 @@ canvas {
   image-rendering: -moz-crisp-edges;
   image-rendering: -o-crisp-edges;
   -ms-interpolation-mode: nearest-neighbor;
+}
+
+h1 {
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+h1, p {
+  margin-bottom: 0.5rem;
 }
 
 input[type="submit"] {

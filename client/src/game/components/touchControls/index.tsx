@@ -1,5 +1,5 @@
 import { Action, Down, Left, Right, Up } from './assets'
-import { ActionContainer, Container, HorizontalControls, MoveContainer, VerticalControls } from './style'
+import { ActionContainer, ButtonsContainer, Container, HorizontalControls, MoveContainer, VerticalControls } from './style'
 
 interface TouchControlsProps {
   isPortrait : boolean
@@ -22,32 +22,34 @@ const KEYUP_EVENTS = {
 
 export default function TouchControls ({isPortrait}:TouchControlsProps) {
   return (
-    <Container isPortrait={isPortrait}>
-      <MoveContainer>
-        <VerticalControls>
-          <Up
-            onTouchStart={() => document.dispatchEvent(KEYDOWN_EVENTS.UP)}
-            onTouchEnd={() => document.dispatchEvent(KEYUP_EVENTS.UP)}
-          />
-          <Down
-            onTouchStart={() => document.dispatchEvent(KEYDOWN_EVENTS.DOWN)}
-            onTouchEnd={() => document.dispatchEvent(KEYUP_EVENTS.DOWN)}
-          />
-        </VerticalControls>
-        <HorizontalControls>
-          <Left
-            onTouchStart={() => document.dispatchEvent(KEYDOWN_EVENTS.LEFT)}
-            onTouchEnd={() => document.dispatchEvent(KEYUP_EVENTS.LEFT)}
-          />
-          <Right
-            onTouchStart={() => document.dispatchEvent(KEYDOWN_EVENTS.RIGHT)}
-            onTouchEnd={() => document.dispatchEvent(KEYUP_EVENTS.RIGHT)}
-          />
-        </HorizontalControls>
-      </MoveContainer>
-      <ActionContainer>
-        <Action onTouchStart={() => document.dispatchEvent(KEYDOWN_EVENTS.ACTION)} />
-      </ActionContainer>
+    <Container>
+      <ButtonsContainer isPortrait={isPortrait}>
+        <MoveContainer>
+          <VerticalControls>
+            <Up
+              onTouchStart={() => document.dispatchEvent(KEYDOWN_EVENTS.UP)}
+              onTouchEnd={() => document.dispatchEvent(KEYUP_EVENTS.UP)}
+            />
+            <Down
+              onTouchStart={() => document.dispatchEvent(KEYDOWN_EVENTS.DOWN)}
+              onTouchEnd={() => document.dispatchEvent(KEYUP_EVENTS.DOWN)}
+            />
+          </VerticalControls>
+          <HorizontalControls>
+            <Left
+              onTouchStart={() => document.dispatchEvent(KEYDOWN_EVENTS.LEFT)}
+              onTouchEnd={() => document.dispatchEvent(KEYUP_EVENTS.LEFT)}
+            />
+            <Right
+              onTouchStart={() => document.dispatchEvent(KEYDOWN_EVENTS.RIGHT)}
+              onTouchEnd={() => document.dispatchEvent(KEYUP_EVENTS.RIGHT)}
+            />
+          </HorizontalControls>
+        </MoveContainer>
+        <ActionContainer>
+          <Action onTouchStart={() => document.dispatchEvent(KEYDOWN_EVENTS.ACTION)} />
+        </ActionContainer>
+      </ButtonsContainer>
     </Container>
   )
 }

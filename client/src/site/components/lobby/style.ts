@@ -2,6 +2,17 @@ import styled from 'styled-components'
 
 export const Container = styled.div`
   align-items: center;
+  display: flex;
+  height: 100%;
+  justify-content: center;
+  left: 0;
+  position: absolute;
+  top: 0;
+  width: 100%;
+`
+
+export const LobbyContainer = styled.div`
+  align-items: center;
   background-color: rgba(0,0,255,0.8);
   bottom: 1%;
   clip-path: polygon(10% 0, 100% 0, 90% 100%, 0 100%);
@@ -18,13 +29,6 @@ export const Container = styled.div`
   }
 `
 
-export const LobbyContainer = styled.div`
-  align-items: center;
-  display: flex;
-  justify-content: space-between;
-  width: 100%;
-`
-
 export const LobbyId = styled.button`
   background-color: rgba(0,0,0,0);
   padding: 1rem 5%;
@@ -38,6 +42,13 @@ export const LobbyId = styled.button`
 
 export const Options = styled.button`
   background-color: rgba(0,0,0,0);
+`
+
+export const OptionsContainer = styled.div`
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
 `
 
 export const PlayBorder = styled.button`
@@ -64,12 +75,13 @@ export const PlayContainer = styled.div`
   justify-content: center;
   max-width: 192px;
   width: 100%;
+  z-index: 1;
   & > *:not(:last-child) {
     margin-bottom: 1.5rem;
   }
 `
 
-export const Players = styled.div`
+export const PlayersContainer = styled.div`
   align-items: center;
   display: flex;
   justify-content: space-evenly;

@@ -3,6 +3,7 @@ import Canvas from '~/game/components/canvas'
 import TouchControls from '~/game/components/touchControls'
 import useIsPortrait from '~/hooks/useIsPortrait'
 import { OptionsDTO } from '~/store/options/reducer'
+import { Container } from './style'
 
 export default function GameApp () {
 
@@ -27,10 +28,10 @@ export default function GameApp () {
   }
 
   return (
-    <>
-    {options.touchControls && <TouchControls isPortrait={isPortrait} />}
-    <Canvas style={getCanvasStyle()} />
-    </>
+    <Container>
+      {options.touchControls && <TouchControls isPortrait={isPortrait} />}
+      <Canvas style={getCanvasStyle()} />
+    </Container>
   )
 
 }

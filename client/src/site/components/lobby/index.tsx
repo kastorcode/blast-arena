@@ -6,7 +6,7 @@ import Toggle from '~/site/components/toggle'
 import { setFillRoom } from '~/store/options/actions'
 import { OptionsDTO } from '~/store/options/reducer'
 import { copyToClipboard, joinRoom } from './method'
-import { Container, LobbyContainer, LobbyId, Options, Play, PlayContainer, PlayBorder, Player, Players } from './style'
+import { Container, LobbyContainer, LobbyId, Options, OptionsContainer, Play, PlayContainer, PlayBorder, Player, PlayersContainer } from './style'
 
 interface LobbyProps {
   lobby          : LobbyDTO
@@ -32,23 +32,23 @@ export default function Lobby ({ lobby, setShowGame, setShowOptions } : LobbyPro
   })
 
   return (
-    <>
-    <PlayContainer>
-      <PlayBorder onClick={joinRoom}><Play>Play!</Play></PlayBorder>
-      <Toggle on={options.fillRoom} onClick={() => dispatch(setFillRoom())}>Fill Room</Toggle>
-    </PlayContainer>
     <Container>
+      <PlayContainer>
+        <PlayBorder onClick={joinRoom}><Play>Play!</Play></PlayBorder>
+        <Toggle on={options.fillRoom} onClick={() => dispatch(setFillRoom())}>Fill Room</Toggle>
+      </PlayContainer>
       <LobbyContainer>
-        <LobbyId onClick={() => copyToClipboard(lobby.lobbyId)}>{lobby.lobbyId}</LobbyId>
-        <Options onClick={() => setShowOptions(true)}>Options</Options>
+        <OptionsContainer>
+          <LobbyId onClick={() => copyToClipboard(lobby.lobbyId)}>{lobby.lobbyId}</LobbyId>
+          <Options onClick={() => setShowOptions(true)}>Options</Options>
+        </OptionsContainer>
+        <PlayersContainer>
+          {lobby.players.map((p,i) => (
+            <Player key={`${i}${p.nick}`}>{p.nick}</Player>
+          ))}
+        </PlayersContainer>
       </LobbyContainer>
-      <Players>
-        {lobby.players.map((p,i) => (
-          <Player key={`${i}${p.nick}`}>{p.nick}</Player>
-        ))}
-      </Players>
     </Container>
-    </>
   )
 
 }

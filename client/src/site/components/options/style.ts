@@ -13,7 +13,9 @@ export const Container = styled.div`
   flex-direction: column;
   height: 100%;
   justify-content: center;
+  left: 0;
   position: absolute;
+  top: 0;
   width: 100%;
 `
 
