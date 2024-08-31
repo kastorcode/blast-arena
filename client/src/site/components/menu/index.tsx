@@ -8,6 +8,7 @@ export default function Menu () {
   return (
     <Container>
       <button onClick={() => navigate('/')}>Home</button>
+      <button onClick={() => navigate('/donate')}>Donate</button>
       <button onClick={() => navigate('/about')}>About</button>
     </Container>
   )

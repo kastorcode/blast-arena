@@ -1,11 +1,12 @@
 import { useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { LobbyDTO } from '#/dto'
+import { copyToClipboard } from '~/services/clipboard'
 import socket from '~/services/socket'
 import Toggle from '~/site/components/toggle'
 import { setFillRoom } from '~/store/options/actions'
 import { OptionsDTO } from '~/store/options/reducer'
-import { copyToClipboard, joinRoom } from './method'
+import { joinRoom } from './method'
 import { Container, LobbyContainer, LobbyId, Options, OptionsContainer, Play, PlayContainer, PlayBorder, Player, PlayersContainer } from './style'
 
 interface LobbyProps {
