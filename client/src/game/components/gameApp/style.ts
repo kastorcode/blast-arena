@@ -1,5 +1,17 @@
 import styled from 'styled-components'
 
+export const ButtonsContainer = styled.div`
+  fill: #fff;
+  height: 100%;
+  max-height: 24px;
+  max-width: 24px;
+  opacity: 50%;
+  position: absolute;
+  right: 1%;
+  top: 1%;
+  width: 100%;
+`
+
 export const Container = styled.div`
   align-items: center;
   display: flex;

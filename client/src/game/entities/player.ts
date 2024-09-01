@@ -9,6 +9,10 @@ import { playBombSound } from '~/game/sound/bomb'
 import { playKillSound } from '~/game/sound/kill'
 import socket from '~/services/socket'
 
+interface LastPress {
+  bomb : number
+}
+
 interface PlayerProps extends PlayerDTO {
   index : number
   speed : number
@@ -19,6 +23,7 @@ interface PlayerProps extends PlayerDTO {
 export interface Player {
   anim       : AnimControl['anim']
   bombId     : string
+  bombKeys   : {[key:string]:'B'}
   bombReach  : number
   bombs      : number
   collidable : boolean
@@ -26,7 +31,10 @@ export interface Player {
   holding    : 0|1
   index      : number
   kick       : boolean
+  lastPress  : LastPress
+  moveKeys   : {[key:string]:SIDES}
   moving     : 0|1
+  movingSide : {[key in SIDES]:boolean}
   myself     : boolean
   nick       : PlayerDTO['nick']
   removeTime : number
@@ -38,8 +46,12 @@ export interface Player {
   setMyself            : () => void
   getAxes              : () => [number, number]
   addInputListener     : (state:GameState) => void
-  removeInputListener  : (state:GameState) => void
-  removeGamepadSupport : (state:GameState) => void
+  removeInputListener  : () => void
+  onVisibilityChange   : () => void
+  keydownListener      : (event:KeyboardEvent) => void
+  keyupListener        : (event:KeyboardEvent) => void
+  removeGamepadSupport : () => void
+  addGamepadSupport    : () => void
   startMove            : (side:SIDES) => void
   moveTick             : (state:GameState) => void
   moves                : {[key in SIDES] : () => void}
@@ -55,35 +67,15 @@ export interface Player {
   render               : (context:CanvasRenderingContext2D) => void
 }
 
-const BOMB_KEYS : {[key:string]:'B'} = {
-  'Z': 'B',
-  'X': 'B',
-  'C': 'B',
-  ' ': 'B'
-}
-
-const MOVE_KEYS : {[key:string]:SIDES} = {
-  'W': 'U',
-  'A': 'L',
-  'S': 'D',
-  'D': 'R',
-  'ARROWUP': 'U',
-  'ARROWLEFT': 'L',
-  'ARROWDOWN': 'D',
-  'ARROWRIGHT': 'R'
-}
-
-const MOVING : {[key in SIDES]:boolean} = {
-  U:false, L:false, D:false, R:false
-}
-
-const LAST_PRESS:{[key:string]:number} = {
-  BOMB:0
-}
-
 export function PlayerFactory (props:PlayerProps) : Player {
   const player : Player = {
     anim: {frameCurrent:0, lastRender:0, sum:true},
+    bombKeys: {
+      'Z': 'B',
+      'X': 'B',
+      'C': 'B',
+      ' ': 'B'
+    },
     bombReach: 2,
     bombs: 1,
     collidable: true,
@@ -91,7 +83,19 @@ export function PlayerFactory (props:PlayerProps) : Player {
     holding: 0,
     index: props.index,
     kick: false,
+    lastPress: {bomb:0},
+    moveKeys: {
+      'W': 'U',
+      'A': 'L',
+      'S': 'D',
+      'D': 'R',
+      'ARROWUP': 'U',
+      'ARROWLEFT': 'L',
+      'ARROWDOWN': 'D',
+      'ARROWRIGHT': 'R'
+    },
     moving: 0,
+    movingSide: {U:false, L:false, D:false, R:false},
     myself: false,
     nick: props.nick,
     side: 'D',
@@ -105,10 +109,9 @@ export function PlayerFactory (props:PlayerProps) : Player {
   player.getAxes = getAxes.bind(player)
   player.addInputListener = addInputListener.bind(player)
   player.removeInputListener = removeInputListener.bind(player)
-  player.removeGamepadSupport = removeGamepadSupport.bind(player)
   player.startMove = startMove.bind(player)
   player.moveTick = moveTick.bind(player)
-  player.moves = { D: moveDown.bind(player), L: moveLeft.bind(player), R: moveRight.bind(player), U: moveUp.bind(player) }
+  player.moves = {D:moveDown.bind(player), L:moveLeft.bind(player), R:moveRight.bind(player), U:moveUp.bind(player)}
   player.onMove = onMove.bind(player)
   player.stopMove = stopMove.bind(player)
   player.invertControls = invertControls.bind(player)
@@ -133,19 +136,24 @@ function getAxes (this:Player) : [number, number] {
 }
 
 function addInputListener (this:Player, state:GameState) {
-  document.addEventListener('visibilitychange', () => onVisibilityChange.call(this, state))
-  document.addEventListener('keydown', event => keydownListener.call(this, event, state))
-  document.addEventListener('keyup', keyupListener.bind(this))
-  window.addEventListener('gamepaddisconnected', () => removeGamepadSupport.call(this, state))
-  window.addEventListener('gamepadconnected', () => addGamepadSupport.call(this, state))
+  this.onVisibilityChange = () => onVisibilityChange.call(this, state)
+  document.addEventListener('visibilitychange', this.onVisibilityChange)
+  this.keydownListener = event => keydownListener.call(this, event, state)
+  document.addEventListener('keydown', this.keydownListener)
+  this.keyupListener = event => keyupListener.call(this, event)
+  document.addEventListener('keyup', this.keyupListener)
+  this.removeGamepadSupport = () => removeGamepadSupport.call(this, state)
+  window.addEventListener('gamepaddisconnected', this.removeGamepadSupport)
+  this.addGamepadSupport = () => addGamepadSupport.call(this, state)
+  window.addEventListener('gamepadconnected', this.addGamepadSupport)
 }
 
-function removeInputListener (this:Player, state:GameState) {
-  document.removeEventListener('visibilitychange', () => onVisibilityChange.call(this, state))
-  document.removeEventListener('keydown', event => keydownListener.call(this, event, state))
-  document.removeEventListener('keyup', keyupListener.bind(this))
-  window.removeEventListener('gamepaddisconnected', () => removeGamepadSupport.call(this, state))
-  window.removeEventListener('gamepadconnected', () => addGamepadSupport.call(this, state))
+function removeInputListener (this:Player) {
+  document.removeEventListener('visibilitychange', this.onVisibilityChange)
+  document.removeEventListener('keydown', this.keydownListener)
+  document.removeEventListener('keyup', this.keyupListener)
+  window.removeEventListener('gamepaddisconnected', this.removeGamepadSupport)
+  window.removeEventListener('gamepadconnected', this.addGamepadSupport)
 }
 
 function onVisibilityChange (this:Player, state:GameState) {
@@ -156,12 +164,12 @@ function keydownListener (this:Player, event:KeyboardEvent, state:GameState) {
   event.preventDefault()
   if (this.removeTime) return
   const key = event.key.toUpperCase()
-  if (MOVE_KEYS[key]) {
-    this.startMove(MOVE_KEYS[key])
+  if (this.moveKeys[key]) {
+    this.startMove(this.moveKeys[key])
   }
-  if (BOMB_KEYS[key]) {
-    if (Date.now() > LAST_PRESS.BOMB) {
-      LAST_PRESS.BOMB = Date.now() + PRESS_INTERVAL
+  if (this.bombKeys[key]) {
+    if (Date.now() > this.lastPress.bomb) {
+      this.lastPress.bomb = Date.now() + PRESS_INTERVAL
       this.handleBomb(state)
     }
   }
@@ -171,14 +179,14 @@ function keyupListener (this:Player, event:KeyboardEvent) {
   event.preventDefault()
   if (this.removeTime) return
   const key = event.key.toUpperCase()
-  if (MOVE_KEYS[key]) this.stopMove(MOVE_KEYS[key])
+  if (this.moveKeys[key]) this.stopMove(this.moveKeys[key])
 }
 
 function addGamepadSupport (this:Player, state:GameState) {
   const id = `G${this.index}`
   if (state.entities.has(id)) return
   const gamepad = GamepadFactory({id, index:0, player:this})
-  if (MOVE_KEYS['W'] === 'D') gamepad.invertControls()
+  if (this.moveKeys['W'] === 'D') gamepad.invertControls()
   state.entities.add(gamepad)
 }
 
@@ -189,7 +197,7 @@ function removeGamepadSupport (this:Player, state:GameState) {
 }
 
 function startMove (this:Player, side:SIDES) {
-  MOVING[side] = true
+  this.movingSide[side] = true
   this.side = side
   this.moving = 1
 }
@@ -264,10 +272,10 @@ function onMove (this:Player, dto:MoveDTO) {
 }
 
 function stopMove (this:Player, side:SIDES) {
-  MOVING[side] = false
+  this.movingSide[side] = false
   this.moving = 0
-  for (const side in MOVING) {
-    if (MOVING[side as SIDES]) {
+  for (const side in this.movingSide) {
+    if (this.movingSide[side as SIDES]) {
       this.side = side as SIDES
       this.moving = 1
       break
@@ -277,15 +285,15 @@ function stopMove (this:Player, side:SIDES) {
   socket.emit('mv', dto)
 }
 
-function invertControls () {
-  MOVE_KEYS['W'] = 'D'
-  MOVE_KEYS['A'] = 'R'
-  MOVE_KEYS['S'] = 'U'
-  MOVE_KEYS['D'] = 'L'
-  MOVE_KEYS['ARROWUP'] = 'D'
-  MOVE_KEYS['ARROWLEFT'] = 'R'
-  MOVE_KEYS['ARROWDOWN'] = 'U'
-  MOVE_KEYS['ARROWRIGHT'] = 'L'
+function invertControls (this:Player) {
+  this.moveKeys['W'] = 'D'
+  this.moveKeys['A'] = 'R'
+  this.moveKeys['S'] = 'U'
+  this.moveKeys['D'] = 'L'
+  this.moveKeys['ARROWUP'] = 'D'
+  this.moveKeys['ARROWLEFT'] = 'R'
+  this.moveKeys['ARROWDOWN'] = 'U'
+  this.moveKeys['ARROWRIGHT'] = 'L'
 }
 
 function handleBomb (this:Player, state:GameState) {
@@ -370,7 +378,7 @@ function kill (this:Player, emit:boolean, state:GameState) {
   }
   playKillSound()
   if (!emit) return
-  this.removeGamepadSupport(state)
+  this.removeGamepadSupport()
   const dto:KillDTO = {p:this.index}
   socket.emit('kl', dto)
 }

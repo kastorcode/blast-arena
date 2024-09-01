@@ -32,7 +32,7 @@ export default function HomePage () {
   return (
     <SiteApp>
       { showGame ? (
-        <GameApp/>
+        <GameApp setShowGame={setShowGame} />
       ) : (
         <Container>
           {!showOptions && <Menu/>}

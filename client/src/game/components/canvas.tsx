@@ -151,13 +151,16 @@ export default function Canvas ({style}:CanvasProps) {
     state.players.setMyself(myself)
     state.players.myself?.addInputListener(state)
     return () => {
-      state.players.myself?.removeInputListener(state)
+      state.players.myself!.removeInputListener()
     }
   }, [myself, state])
 
   useEffect(() => {
     if (!context || typeof myself !== 'number' || !state) return
     gameLoop(Date.now())
+    return () => {
+      state.stage.stopBgSound()
+    }
   }, [context, myself, state])
 
   useEffect(() => {
@@ -166,7 +169,7 @@ export default function Canvas ({style}:CanvasProps) {
     if (!context2d) return
     context2d.imageSmoothingEnabled = false
     setContext(context2d)
-  })
+  }, [])
 
   return (
     <canvas ref={canvasRef} width={240} height={208} style={style} />

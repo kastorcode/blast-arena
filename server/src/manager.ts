@@ -146,3 +146,7 @@ function deleteGameState (io : Server, socket : Socket) {
   const room = io.sockets.adapter.rooms.get(socket.data.roomId)
   if (!room || !room.size) delete states[socket.data.roomId]
 }
+
+export function exitPairing (socket:Socket) {
+  socket.data.isPairing = false
+}

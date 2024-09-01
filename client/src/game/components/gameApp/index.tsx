@@ -1,11 +1,18 @@
+import { useEffect } from 'react'
 import { useSelector } from 'react-redux'
 import Canvas from '~/game/components/canvas'
 import TouchControls from '~/game/components/touchControls'
 import useIsPortrait from '~/hooks/useIsPortrait'
+import socket from '~/services/socket'
 import { OptionsDTO } from '~/store/options/reducer'
-import { Container } from './style'
+import { Back } from './assets'
+import { ButtonsContainer, Container } from './style'
 
-export default function GameApp () {
+interface GameAppProps {
+  setShowGame : React.Dispatch<React.SetStateAction<boolean>>
+}
+
+export default function GameApp ({setShowGame}:GameAppProps) {
 
   const isPortrait = useIsPortrait()
   const options = useSelector<any,OptionsDTO>(state => state.options)
@@ -27,9 +34,18 @@ export default function GameApp () {
     return style
   }
 
+  useEffect(() => {
+    return () => {
+      socket.emit('exit_pairing')
+    }
+  }, [])
+
   return (
     <Container>
       {options.touchControls && <TouchControls isPortrait={isPortrait} />}
+      <ButtonsContainer>
+        <Back onClick={() => setShowGame(false)}/>
+      </ButtonsContainer>
       <Canvas style={getCanvasStyle()} />
     </Container>
   )
