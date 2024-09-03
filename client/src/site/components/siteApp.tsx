@@ -4,6 +4,7 @@ import { useDispatch, useSelector } from 'react-redux'
 import { useSearchParams } from 'react-router-dom'
 import { LobbyDTO, UserDTO } from '#/dto'
 import useBoot from '~/hooks/useBoot'
+import { errorHandler } from '~/services/errorHandler'
 import randomuser from '~/services/randomuser'
 import socket from '~/services/socket'
 import { updateLobby } from '~/store/lobby/actions'
@@ -59,13 +60,13 @@ export default function SiteApp ({ children } : SiteAppProps) {
   }, [lobby])
 
   useEffect(() => {
-    socket.on('error', console.error)
+    socket.on('error', errorHandler)
     socket.on('update_lobby', lobby => dispatch(updateLobby(lobby)))
     return () => {
-      socket.off('error', console.error)
+      socket.off('error', errorHandler)
       socket.off('update_lobby', lobby => dispatch(updateLobby(lobby)))
     }
-  })
+  }, [])
 
   return children
 

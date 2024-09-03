@@ -85,3 +85,12 @@ input[type="text"]:focus {
 input[type="text"]::placeholder {
   color: rgb(0,0,255);
 }
+
+.svgHover {
+  opacity: 0.5;
+}
+
+.svgHover:hover {
+  cursor: pointer;
+  opacity: 1;
+}

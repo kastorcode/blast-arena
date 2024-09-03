@@ -146,6 +146,7 @@ function addInputListener (this:Player, state:GameState) {
   window.addEventListener('gamepaddisconnected', this.removeGamepadSupport)
   this.addGamepadSupport = () => addGamepadSupport.call(this, state)
   window.addEventListener('gamepadconnected', this.addGamepadSupport)
+  this.addGamepadSupport()
 }
 
 function removeInputListener (this:Player) {
@@ -183,9 +184,12 @@ function keyupListener (this:Player, event:KeyboardEvent) {
 }
 
 function addGamepadSupport (this:Player, state:GameState) {
+  const index = 0
+  const hasGamepad = navigator.getGamepads()[index]
+  if (!hasGamepad) return
   const id = `G${this.index}`
   if (state.entities.has(id)) return
-  const gamepad = GamepadFactory({id, index:0, player:this})
+  const gamepad = GamepadFactory({id, index, player:this})
   if (this.moveKeys['W'] === 'D') gamepad.invertControls()
   state.entities.add(gamepad)
 }

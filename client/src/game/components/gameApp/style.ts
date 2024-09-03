@@ -5,7 +5,6 @@ export const ButtonsContainer = styled.div`
   height: 100%;
   max-height: 24px;
   max-width: 24px;
-  opacity: 50%;
   position: absolute;
   right: 1%;
   top: 1%;

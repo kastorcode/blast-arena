@@ -10,33 +10,31 @@ interface GamepadProps {
 }
 
 interface GamepadHost {
-  id     : string
-  index  : number
-  player : Player
+  bombKeys  : {[key:number]:'B'}
+  id        : string
+  index     : number
+  lastPress : LastPress
+  moveKeys  : {[key:number]:SIDES}
+  player    : Player
   invertControls : () => void
   tick           : (state:GameState) => void
   render         : () => void
 }
 
-const MOVE_KEYS:{[key:number]:SIDES} = {
-  12:'U', 14:'L', 13:'D', 15:'R'
-}
-
-const BOMB_KEYS:{[key:number]:'B'} = {
-  0:'B', 1:'B', 2:'B', 3:'B'
-}
-
-const LAST_PRESS:{[key:string]:number} = {
-  BOMB:0
+interface LastPress {
+  bomb : number
 }
 
 export function GamepadFactory (props:GamepadProps) : GamepadHost {
   const host:GamepadHost = {
+    bombKeys: {0:'B', 1:'B', 2:'B', 3:'B'},
     id: props.id,
     index: props.index,
+    lastPress: {bomb:0},
+    moveKeys: {12:'U', 13:'D', 14:'L', 15:'R'},
     player: props.player,
     render: () => {}
-  } as GamepadHost
+  } as unknown as GamepadHost
   host.invertControls = invertControls.bind(host)
   host.tick = tick.bind(host)
   return host
@@ -46,35 +44,35 @@ function tick (this:GamepadHost, state:GameState) {
   const gamepad = navigator.getGamepads()[this.index]
   if (!gamepad) return
   let useAxes = true
-  for (const key in MOVE_KEYS) {
+  for (const key in this.moveKeys) {
     if (gamepad.buttons[key].pressed) {
-      this.player.startMove(MOVE_KEYS[key])
+      this.player.startMove(this.moveKeys[key])
       useAxes = false
     }
     else {
-      this.player.stopMove(MOVE_KEYS[key])
+      this.player.stopMove(this.moveKeys[key])
     }
   }
   if (useAxes) {
-    if      (gamepad.axes[1] > 0.3)  this.player.startMove(MOVE_KEYS[13])
-    else if (gamepad.axes[1] < -0.3) this.player.startMove(MOVE_KEYS[12])
-    else if (gamepad.axes[0] > 0.2)  this.player.startMove(MOVE_KEYS[15])
-    else if (gamepad.axes[0] < -0.2) this.player.startMove(MOVE_KEYS[14])
+    if      (gamepad.axes[1] > 0.3)  this.player.startMove(this.moveKeys[13])
+    else if (gamepad.axes[1] < -0.3) this.player.startMove(this.moveKeys[12])
+    else if (gamepad.axes[0] > 0.2)  this.player.startMove(this.moveKeys[15])
+    else if (gamepad.axes[0] < -0.2) this.player.startMove(this.moveKeys[14])
     else                             this.player.stopMove(this.player.side)
   }
-  for (const key in BOMB_KEYS) {
+  for (const key in this.bombKeys) {
     if (gamepad.buttons[key].pressed) {
-      if (Date.now() > LAST_PRESS.BOMB) {
-        LAST_PRESS.BOMB = Date.now() + PRESS_INTERVAL
+      if (Date.now() > this.lastPress.bomb) {
+        this.lastPress.bomb = Date.now() + PRESS_INTERVAL
         this.player.handleBomb(state)
       }
     }
   }
 }
 
-function invertControls () {
-  MOVE_KEYS[12] = 'D'
-  MOVE_KEYS[14] = 'R'
-  MOVE_KEYS[13] = 'U'
-  MOVE_KEYS[15] = 'L'
+function invertControls (this:GamepadHost) {
+  this.moveKeys[12] = 'D'
+  this.moveKeys[13] = 'U'
+  this.moveKeys[14] = 'R'
+  this.moveKeys[15] = 'L'
 }
