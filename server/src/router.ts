@@ -1,9 +1,11 @@
 import { Router } from 'express'
+import { Server } from 'socket.io'
 
 const router = Router()
 
-router.get('/', (request, response) => {
-  response.send('Socket.io server is running')
-})
-
-export default router
+export default (io:Server) => {
+  router.get('/players/count', (request, response) => {
+    return response.send(io.engine.clientsCount.toString())
+  })
+  return router
+}

@@ -8,6 +8,7 @@ import { StageFactory } from '~/game/entities/stage'
 import { GameState } from '~/game/entities/state'
 import { playBombSound } from '~/game/sound/bomb'
 import socket from '~/services/socket'
+import { Pairing, Players } from './style'
 
 interface CanvasProps {
   style : React.CSSProperties
@@ -172,7 +173,13 @@ export default function Canvas ({style}:CanvasProps) {
   }, [])
 
   return (
+    <>
+    {!state && <Pairing>Pairing</Pairing>}
+    <Players>
+      {state?.players.players.map(({nick},i) => <p>{++i}. {nick}</p>)}
+    </Players>
     <canvas ref={canvasRef} width={240} height={208} style={style} />
+    </>
   )
 
 }

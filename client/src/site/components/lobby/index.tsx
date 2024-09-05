@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from 'react-redux'
 import { LobbyDTO } from '#/dto'
 import { copyToClipboard } from '~/services/clipboard'
 import socket from '~/services/socket'
+import OnlinePlayers from '~/site/components/onlinePlayers'
 import Toggle from '~/site/components/toggle'
 import { setFillRoom } from '~/store/options/actions'
 import { OptionsDTO } from '~/store/options/reducer'
@@ -37,6 +38,7 @@ export default function Lobby ({ lobby, setShowGame, setShowOptions } : LobbyPro
       <PlayContainer>
         <PlayBorder onClick={joinRoom}><Play>Play!</Play></PlayBorder>
         <Toggle on={options.fillRoom} onClick={() => dispatch(setFillRoom())}>Fill Room</Toggle>
+        <OnlinePlayers/>
       </PlayContainer>
       <LobbyContainer>
         <OptionsContainer>

@@ -6,7 +6,6 @@ import { MAX_PLAYERS } from '~/constants'
 import { Socket } from '~/extends'
 import { startGameFactory, updateLobbyFactory } from '~/factory'
 import { rooms } from '~/rooms'
-import { states } from '~/states'
 import { generateId } from '~/util'
 
 export function setUser (io : Server, socket : Socket, user : UserDTO) {
@@ -67,9 +66,12 @@ export async function joinRoom (io:Server, socket:Socket, dto:JoinRoomDTO) {
   }
 }
 
-export function onDisconnect (io : Server, socket : Socket) {
+export function onDisconnect (io:Server, socket:Socket) {
   updateRoomQueue(socket)
-  deleteGameState(io, socket)
+  const dto = updateLobbyFactory(io, socket.data.lobbyId)
+  if (dto) {
+    io.to(socket.data.lobbyId).emit('update_lobby', dto)
+  }
 }
 
 async function enterLobby (io:Server, socket:Socket, lobbyId:string) {
@@ -137,7 +139,7 @@ async function joinRoomQueue (io : Server, socket : Socket, players : Socket[]) 
   return rooms.set(roomId, players.length)
 }
 
-function updateRoomQueue (socket : Socket) {
+function updateRoomQueue (socket:Socket) {
   let playersOn = rooms.get(socket.data.roomId)
   if (typeof playersOn !== 'number') return
   playersOn--
@@ -145,12 +147,7 @@ function updateRoomQueue (socket : Socket) {
   else           rooms.delete(socket.data.roomId)
 }
 
-function deleteGameState (io : Server, socket : Socket) {
-  if (!states[socket.data.roomId]) return
-  const room = io.sockets.adapter.rooms.get(socket.data.roomId)
-  if (!room || !room.size) delete states[socket.data.roomId]
-}
-
 export function exitPairing (socket:Socket) {
+  updateRoomQueue(socket)
   socket.data.isPairing = false
 }

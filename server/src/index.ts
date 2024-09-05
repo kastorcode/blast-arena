@@ -12,7 +12,7 @@ const server = https.createServer(getSsl(), app)
 const io = new Server(server, { cors: CORS })
 
 app.use(cors(CORS))
-app.use('/', router)
+app.use('/', router(io))
 ioListener(io)
 
 server.listen(PORT, () => {

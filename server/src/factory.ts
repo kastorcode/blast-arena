@@ -2,7 +2,6 @@ import { Server } from 'socket.io'
 import { BLASTS, BOMBS, BONUS, BONUSES, SPRITES, STAGES } from '#/constants'
 import { BlockDTO, GameStateDTO, LobbyDTO, StartGameDTO } from '#/dto'
 import { Socket } from '~/extends'
-import { states } from '~/states'
 
 export function startGameFactory (io : Server, roomId : string) : StartGameDTO|null {
   const room = io.sockets.adapter.rooms.get(roomId)
@@ -21,7 +20,6 @@ export function startGameFactory (io : Server, roomId : string) : StartGameDTO|n
   }
   if (!players.length) return null
   const state = stateFactory()
-  states[roomId] = state
   return { players, state }
 }
 

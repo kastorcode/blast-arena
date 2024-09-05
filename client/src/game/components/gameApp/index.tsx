@@ -28,7 +28,7 @@ export default function GameApp ({setShowGame}:GameAppProps) {
     if (options.touchControls) {
       if (isPortrait) {
         style.alignSelf = 'flex-start'
-        style.marginTop = '10%'
+        style.marginTop = '20%'
       }
     }
     return style

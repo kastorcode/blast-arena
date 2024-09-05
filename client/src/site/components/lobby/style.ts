@@ -77,13 +77,14 @@ export const PlayContainer = styled.div`
   width: 100%;
   z-index: 1;
   & > *:not(:last-child) {
-    margin-bottom: 1.5rem;
+    margin-bottom: 1rem;
   }
 `
 
 export const PlayersContainer = styled.div`
   align-items: center;
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-evenly;
   padding: 1rem 6% 1rem 0;
   width: 100%;

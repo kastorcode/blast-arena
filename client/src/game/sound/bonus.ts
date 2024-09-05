@@ -19,6 +19,6 @@ export function playBonusSound (bonus:Bonus['bonus']) {
   const sound:HTMLAudioElement|undefined = SOUNDS[bonus as keyof typeof SOUNDS]
   if (!sound) return
   if ((sound.currentTime > 0 && sound.ended) || (sound.currentTime === 0)) {
-    sound.play()
+    sound.play().catch(()=>{})
   }
 }
