@@ -1,8 +1,9 @@
 import { useRef } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { ID_LENGTH, NICK } from '#/constants'
+import { dispatchOfferCall } from '~/services/events'
 import Toggle from '~/site/components/toggle'
-import { setTouchControls } from '~/store/options/actions'
+import { setCall, setTouchControls } from '~/store/options/actions'
 import { OptionsDTO } from '~/store/options/reducer'
 import { setUserNick } from '~/store/user/actions'
 import { submitChangeLobby } from './method'
@@ -25,6 +26,7 @@ export default function Options ({ setShowOptions } : OptionsProps) {
     if (!value || value.length !== ID_LENGTH) return
     setShowOptions(false)
     submitChangeLobby(value)
+    dispatchOfferCall()
   }
 
   function handleChangeNick (event:React.FormEvent<HTMLFormElement>) {
@@ -47,6 +49,9 @@ export default function Options ({ setShowOptions } : OptionsProps) {
           <input ref={nickRef} type='text' placeholder='new nick' maxLength={NICK.MAX} minLength={NICK.MIN} />
           <input type='submit' value='Replace' />
         </form>
+        <Toggle on={options.call} onClick={() => dispatch(setCall())}>
+          Enable Call
+        </Toggle>
         <Toggle on={options.touchControls} onClick={() => dispatch(setTouchControls())}>
           Touch Controls
         </Toggle>

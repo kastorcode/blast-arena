@@ -48,6 +48,11 @@ button:hover, input[type="submit"]:hover {
   cursor: pointer;
 }
 
+#call {
+  height: 0;
+  width: 0;
+}
+
 canvas {
   image-rendering: pixelated;
   image-rendering: -moz-crisp-edges;

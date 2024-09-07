@@ -1,5 +1,9 @@
 import { OptionsDTO } from './reducer'
 
+export function setCall () {
+  return { type: 'SET_CALL' }
+}
+
 export function setFillRoom () {
   return { type: 'SET_FILL_ROOM' }
 }

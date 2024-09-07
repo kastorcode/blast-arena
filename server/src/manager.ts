@@ -1,6 +1,6 @@
 import { Server } from 'socket.io'
 import { ID_LENGTH, NICK } from '#/constants'
-import { JoinRoomDTO, UserDTO } from '#/dto'
+import { DisconnectedDTO, JoinRoomDTO, UserDTO } from '#/dto'
 import { ERRORS } from '#/errors'
 import { MAX_PLAYERS } from '~/constants'
 import { Socket } from '~/extends'
@@ -8,15 +8,13 @@ import { startGameFactory, updateLobbyFactory } from '~/factory'
 import { rooms } from '~/rooms'
 import { generateId } from '~/util'
 
-export function setUser (io : Server, socket : Socket, user : UserDTO) {
+export function setUser (io:Server, socket:Socket, user:UserDTO) {
   if (typeof user.nick !== 'string' || user.nick.length < NICK.MIN || user.nick.length > NICK.MAX) {
     return socket.emit('error', ERRORS.SET_USER_FAILED)
   }
   socket.data.nick = user.nick
   const dto = updateLobbyFactory(io, socket.data.lobbyId)
-  if (dto) {
-    io.to(socket.data.lobbyId).emit('update_lobby', dto)
-  }
+  dto && sendToLobby(io, socket, 'update_lobby', dto)
 }
 
 export function createLobby (io : Server, socket : Socket) {
@@ -70,7 +68,9 @@ export function onDisconnect (io:Server, socket:Socket) {
   updateRoomQueue(socket)
   const dto = updateLobbyFactory(io, socket.data.lobbyId)
   if (dto) {
-    io.to(socket.data.lobbyId).emit('update_lobby', dto)
+    const dis:DisconnectedDTO = {socketId:socket.id}
+    sendToLobby(io, socket, 'disconnected', dis)
+    sendToLobby(io, socket, 'update_lobby', dto)
   }
 }
 
@@ -79,9 +79,7 @@ async function enterLobby (io:Server, socket:Socket, lobbyId:string) {
   await socket.join(lobbyId)
   socket.data.lobbyId = lobbyId
   const dto = updateLobbyFactory(io, lobbyId)
-  if (dto) {
-    io.to(lobbyId).emit('update_lobby', dto)
-  }
+  dto && sendToLobby(io, socket, 'update_lobby', dto)
 }
 
 function getLobbyPlayers (io : Server, lobby : Set<string>) {
@@ -150,4 +148,8 @@ function updateRoomQueue (socket:Socket) {
 export function exitPairing (socket:Socket) {
   updateRoomQueue(socket)
   socket.data.isPairing = false
+}
+
+export function sendToLobby (io:Server, socket:Socket, event:string, dto:any) {
+  io.to(socket.data.lobbyId).emit(event, dto)
 }

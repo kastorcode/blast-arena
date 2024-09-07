@@ -7,6 +7,20 @@ export interface BlockDTO {
   y  : number          // block y position
 }
 
+export interface CallAnswerDTO {
+  answer   : RTCSessionDescriptionInit
+  socketId : string
+}
+
+export interface CallOfferDTO {
+  offer    : RTCSessionDescriptionInit
+  socketId : string
+}
+
+export interface DisconnectedDTO {
+  socketId : string
+}
+
 export interface FlingBombDTO {
   i : string // bomb id
   p : number // player index
@@ -26,6 +40,11 @@ export interface GameStateDTO {
 export interface HoldBombDTO {
   i : string // bomb id
   p : number // player index
+}
+
+export interface IceCandidateDTO {
+  candidate : RTCIceCandidate
+  socketId  : string
 }
 
 export interface JoinRoomDTO {

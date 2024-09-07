@@ -4,17 +4,23 @@ interface Action {
 }
 
 export interface OptionsDTO {
+  call          : boolean
   fillRoom      : boolean
   touchControls : boolean
 }
 
 export const dto:OptionsDTO = {
+  call: true,
   fillRoom: true,
   touchControls: false
 }
 
 export default function optionsReducer (state=dto, action:Action) {
   switch (action.type) {
+    case 'SET_CALL': return {
+      ...state,
+      call: !state.call
+    }
     case 'SET_FILL_ROOM': return {
       ...state,
       fillRoom: !state.fillRoom
