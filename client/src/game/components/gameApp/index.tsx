@@ -4,6 +4,7 @@ import Canvas from '~/game/components/canvas'
 import TouchControls from '~/game/components/touchControls'
 import useIsPortrait from '~/hooks/useIsPortrait'
 import socket from '~/services/socket'
+import { rootElement } from '~/site/view/elements'
 import { OptionsDTO } from '~/store/options/reducer'
 import { Back } from './assets'
 import { ButtonsContainer, Container } from './style'
@@ -34,9 +35,25 @@ export default function GameApp ({setShowGame}:GameAppProps) {
     return style
   }
 
+  function handleBackButton (event:PopStateEvent) {
+    event.preventDefault()
+    setShowGame(false)
+  }
+
+  function preventDefault (event:TouchEvent) {
+    return event.preventDefault()
+  }
+
   useEffect(() => {
+    document.addEventListener('touchmove', preventDefault, {passive:false})
+    window.addEventListener('popstate', handleBackButton, {passive:false})
+    if (options.fullScreen) {
+      rootElement.requestFullscreen()
+    }
     return () => {
       socket.emit('exit_pairing')
+      document.removeEventListener('touchmove', preventDefault)
+      window.removeEventListener('popstate', handleBackButton)
     }
   }, [])
 

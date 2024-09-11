@@ -12,7 +12,7 @@ export default function OnlinePlayers () {
       if (loading) return
       setLoading(true)
       const {data} = await axios<number>('/players/count')
-      setCount(data > 1 ? `${data} Players` : `${data} Player`)
+      setCount(data > 1 ? `${data} Players Online` : `${data} Player Online`)
     }
     finally {
       setTimeout(() => setLoading(false), 1000)

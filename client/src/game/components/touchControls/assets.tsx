@@ -3,7 +3,7 @@ interface ActionProps {
 }
 
 interface MoveProps {
-  onTouchStart : () => void
+  onTouchStart : (event:React.TouchEvent<SVGSVGElement>) => void
   onTouchEnd   : () => void
 }
 

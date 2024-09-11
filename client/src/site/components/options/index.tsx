@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from 'react-redux'
 import { ID_LENGTH, NICK } from '#/constants'
 import { dispatchOfferCall } from '~/services/events'
 import Toggle from '~/site/components/toggle'
-import { setCall, setTouchControls } from '~/store/options/actions'
+import { setCall, setFullScreen, setTouchControls } from '~/store/options/actions'
 import { OptionsDTO } from '~/store/options/reducer'
 import { setUserNick } from '~/store/user/actions'
 import { submitChangeLobby } from './method'
@@ -51,6 +51,9 @@ export default function Options ({ setShowOptions } : OptionsProps) {
         </form>
         <Toggle on={options.call} onClick={() => dispatch(setCall())}>
           Enable Call
+        </Toggle>
+        <Toggle on={options.fullScreen} onClick={() => dispatch(setFullScreen())}>
+          FullScreen
         </Toggle>
         <Toggle on={options.touchControls} onClick={() => dispatch(setTouchControls())}>
           Touch Controls

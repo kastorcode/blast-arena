@@ -1,21 +1,12 @@
 import styled from 'styled-components'
 
-export const ActionContainer = styled.div`
+export const ActionContainer = styled.div<{isPortrait:boolean}>`
+  bottom: ${({isPortrait}) => isPortrait ? '15%' : 'auto'};
   height: 100%;
   max-height: 96px;
   max-width: 96px;
-  width: 100%;
-`
-
-export const ButtonsContainer = styled.div<{isPortrait:boolean}>`
-  align-items: center;
-  bottom: ${({isPortrait}) => isPortrait ? '10%' : 'auto'};
-  display: flex;
-  height: 100%;
-  justify-content: space-between;
-  max-height: 192px;
-  padding: 0 2%;
   position: absolute;
+  right: 4%;
   width: 100%;
 `
 
@@ -32,6 +23,12 @@ export const Container = styled.div`
   width: 100%;
 `
 
+export const ControlsContainer = styled.div`
+  height: 192px;
+  position: relative;
+  width: 192px;
+`
+
 export const HorizontalControls = styled.div`
   display: flex;
   flex-direction: row;
@@ -44,11 +41,17 @@ export const HorizontalControls = styled.div`
   }
 `
 
-export const MoveContainer = styled.div`
+export const MoveContainer = styled.div<{isPortrait:boolean}>`
+  align-items: ${({isPortrait}) => isPortrait ? 'flex-end' : 'center'};
+  display: flex;
   height: 100%;
-  max-width: 192px;
-  position: relative;
-  width: 100%;
+  justify-content: ${({isPortrait}) => isPortrait ? 'center' : 'flex-start'};
+  left: 0;
+  min-width: 50%;
+  padding-bottom: ${({isPortrait}) => isPortrait ? '15%' : '0'};
+  padding-left: ${({isPortrait}) => isPortrait ? '0' : '2%'};
+  position: absolute;
+  top: 0;
 `
 
 export const VerticalControls = styled.div`

@@ -6,12 +6,14 @@ interface Action {
 export interface OptionsDTO {
   call          : boolean
   fillRoom      : boolean
+  fullScreen    : boolean
   touchControls : boolean
 }
 
 export const dto:OptionsDTO = {
   call: true,
   fillRoom: true,
+  fullScreen: true,
   touchControls: false
 }
 
@@ -24,6 +26,10 @@ export default function optionsReducer (state=dto, action:Action) {
     case 'SET_FILL_ROOM': return {
       ...state,
       fillRoom: !state.fillRoom
+    }
+    case 'SET_FULL_SCREEN': return {
+      ...state,
+      fullScreen: !state.fullScreen
     }
     case 'SET_OPTIONS': return {
       ...action.payload

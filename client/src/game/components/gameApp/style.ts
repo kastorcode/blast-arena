@@ -6,8 +6,8 @@ export const ButtonsContainer = styled.div`
   max-height: 24px;
   max-width: 24px;
   position: absolute;
-  right: 1%;
-  top: 1%;
+  right: 2%;
+  top: 2%;
   width: 100%;
 `
 
@@ -19,5 +19,6 @@ export const Container = styled.div`
   left: 0;
   position: absolute;
   top: 0;
+  user-select: none;
   width: 100%;
 `
