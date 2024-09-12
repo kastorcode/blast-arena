@@ -17,3 +17,9 @@ export const Players = styled.div`
     margin: 0;
   }
 `
+
+export const Timer = styled.div`
+  position: absolute;
+  right: calc(3% + 24px);
+  top: 2%;
+`

@@ -11,6 +11,7 @@ export interface Blocks {
   blocks : (Block|Bonus|BombBlock|null)[][]
   getBlock     : (axes:[number,number]) => Block|Bonus|BombBlock|null
   destroyBlock : (axes:[number,number], state:GameState) => void
+  putBlock     : (dto:BlockDTO, axes:[number,number]) => void
   putBomb      : (bomb:Bomb) => void
   tick         : (state:GameState) => void
   render       : (context:CanvasRenderingContext2D, state:GameState) => void
@@ -37,31 +38,33 @@ const TOLERANCE_UP = 8
 const TOLERANCE_DOWN = 2
 
 export function BlocksFactory (blocksDto : (BlockDTO|null)[][]) : Blocks {
-  const blocks = blocksDto.map((row,i) => row.map((dto,j) => {
-    if (!dto) return null
-    const block:Block = dto as Block
-    if (block.t === 'D') {
-      block.anim = {frameCurrent:0, lastRender:0, sum:true}
-      block.axes = [i, j]
-      block.destroying = false
-      block.destroy = startDestroyBlock.bind(block)
-      block.tick = tickD.bind(block)
-      block.render = renderAndDestroy.bind(block)
-    }
-    else {
-      block.axes = [i, j]
-      block.destroy = () => {}
-      block.tick = tickI.bind(block)
-      block.render = () => {}
-    }
-    return block
-  }))
+  const blocks = blocksDto.map((row,i) => row.map((dto,j) => createBlock(dto, [i,j])))
   const getBlock = getOneBlock.bind(blocks)
   const destroyBlock = nullifyBlock.bind(blocks)
+  const putBlock = putOneBlock.bind(blocks)
   const putBomb = putOneBomb.bind(blocks)
   const tick = tickPlayer.bind(blocks)
   const render = renderBlocks.bind(blocks)
-  return { blocks, getBlock, destroyBlock, putBomb, tick, render }
+  return { blocks, getBlock, destroyBlock, putBlock, putBomb, tick, render }
+}
+
+function createBlock (dto:BlockDTO|null, axes:[number,number]) {
+  if (!dto) return null
+  const block:Block = dto as Block
+  block.axes = axes
+  if (block.t === 'D') {
+    block.anim = {frameCurrent:0, lastRender:0, sum:true}
+    block.destroying = false
+    block.destroy = startDestroyBlock.bind(block)
+    block.tick = tickD.bind(block)
+    block.render = renderAndDestroy.bind(block)
+  }
+  else {
+    block.destroy = () => {}
+    block.tick = tickI.bind(block)
+    block.render = () => {}
+  }
+  return block
 }
 
 function getOneBlock (this:Blocks['blocks'], axes:[number,number]) : Block|Bonus|BombBlock|null {
@@ -84,6 +87,14 @@ function nullifyBlock (this:Blocks['blocks'], axes:[number,number], state:GameSt
   else {
     this[axes[0]][axes[1]] = null
   }
+}
+
+function putOneBlock (this:Blocks['blocks'], dto:BlockDTO, axes:[number,number]) {
+  const block = createBlock(dto, axes) as Block
+  block.render = (context:CanvasRenderingContext2D, state:GameState) => {
+    context.drawImage(state.stage.bg, 0, 0, 16, 16, block.x, block.y, 16, 16)
+  }
+  this[axes[0]][axes[1]] = block
 }
 
 function putOneBomb (this:Blocks['blocks'], bomb:Bomb) {

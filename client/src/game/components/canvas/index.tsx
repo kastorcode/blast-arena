@@ -6,9 +6,10 @@ import { EntitiesFactory } from '~/game/entities/factory'
 import { PlayersFactory } from '~/game/entities/players'
 import { StageFactory } from '~/game/entities/stage'
 import { GameState } from '~/game/entities/state'
+import { TimerFactory } from '~/game/entities/timer'
 import { playBombSound } from '~/game/sound/bomb'
 import socket from '~/services/socket'
-import { Pairing, Players } from './style'
+import { Pairing, Players, Timer } from './style'
 
 interface CanvasProps {
   style : React.CSSProperties
@@ -63,13 +64,17 @@ export default function Canvas ({style}:CanvasProps) {
 
   function startGame (dto:StartGameDTO) {
     socket.off('start_game', startGame)
-    setState({
+    const state = {
       ...dto.state,
       blocks: BlocksFactory(dto.state.blocks),
       entities: EntitiesFactory(),
       players: PlayersFactory(dto.players),
       stage: StageFactory({bg:dto.state.stage})
-    })
+    }
+    const timer = TimerFactory()
+    timer.start()
+    state.entities.add(timer)
+    setState(state)
   }
 
   function onMove (dto:MoveDTO) {
@@ -176,8 +181,9 @@ export default function Canvas ({style}:CanvasProps) {
     <>
     {!state && <Pairing>Pairing</Pairing>}
     <Players>
-      {state?.players.players.map(({nick},i) => <p>{++i}. {nick}</p>)}
+      {state?.players.players.map(({nick},i) => <p key={`${nick}${i}`}>{++i}. {nick}</p>)}
     </Players>
+    <Timer id='timer' />
     <canvas ref={canvasRef} width={240} height={208} style={style} />
     </>
   )
