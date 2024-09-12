@@ -1,4 +1,5 @@
 import { GameState } from '~/game/entities/state'
+import { playBlockSound } from '~/game/sound/block'
 import { Assets } from '~/game/util/assets'
 
 interface Block {
@@ -63,6 +64,7 @@ function tick (this:BlockFiller, state:GameState) {
   const block = this.blocks[this.currentBlock]
   block.y += SPEED
   if (block.y > block.finalY) {
+    playBlockSound()
     state.blocks.putBlock({t:'I', x:block.x, y:block.finalY}, block.axes)
     this.currentBlock++
     const playerAxes = state.players.myself!.getAxes()

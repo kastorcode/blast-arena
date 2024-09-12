@@ -1,4 +1,5 @@
 import { GameState } from '~/game/entities/state'
+import { playTimerSound } from '~/game/sound/timer'
 import { BlockFillerFactory } from './blockFiller'
 
 export interface Timer {
@@ -35,9 +36,9 @@ function start (this:Timer) {
 function tick (this:Timer, state:GameState) {
   this.elapsedTime = Date.now() - this.startTime
   this.remainingTime = this.totalTime - this.elapsedTime
-  if (this.remainingTime <= 0) {
-    state.entities.add(BlockFillerFactory())
+  if (this.remainingTime < 800) {
     state.entities.remove(this)
+    playTimerSound(() => state.entities.add(BlockFillerFactory()))
   }
 }
 

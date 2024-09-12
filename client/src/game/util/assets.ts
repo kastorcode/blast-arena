@@ -39,6 +39,7 @@ export class Assets {
 
   public static stopBgSound () {
     this.bgSound.pause()
+    this.bgSound.playbackRate = 1.0
     this.bgSound.currentTime = 0
   }
 
