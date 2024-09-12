@@ -8,6 +8,7 @@ import { GameState } from '~/game/entities/state'
 import { playBlastSound } from '~/game/sound/blast'
 import { playFlingSound } from '~/game/sound/fling'
 import { playKickSound } from '~/game/sound/kick'
+import { Assets } from '~/game/util/assets'
 import { isColliding, stopPlayer } from '~/game/util/collision'
 import socket from '~/services/socket'
 
@@ -17,7 +18,6 @@ interface BombProps {
   player     ?: Player
   playerIndex : number
   reach       : number
-  state       : GameState
   x          ?: number
   y          ?: number
 }
@@ -40,7 +40,6 @@ export interface Bomb {
   reach         : number
   removeTime    : number
   side          : SIDES
-  sprite        : HTMLImageElement
   x             : number
   y             : number
   moves  : {[key in SIDES]:(state:GameState) => void}
@@ -64,12 +63,10 @@ export function BombFactory (props : BombProps) : Bomb {
     bomb.x = (props.axes[1] + 1) * TILE_SIZE || TILE_SIZE
     bomb.y = (props.axes[0] + 1) * TILE_SIZE || TILE_SIZE
   }
-  bomb.sprite = new Image()
-  bomb.sprite.src = `/sprites/bombs/${props.state.bomb}.png`
   bomb.anim = {frameCurrent:0, lastRender:0, sum:true}
   bomb.armed = true
   bomb.detonated = false
-  bomb.blast = BlastFactory(props.state)
+  bomb.blast = BlastFactory()
   bomb.collidable = false
   bomb.directions = {up:0, right:0, down:0, left:0}
   bomb.holding = false
@@ -123,7 +120,7 @@ function detonate (this:Bomb, state:GameState) {
     else if (b.t === 'I') break
     else {
       this.directions.up++
-      state.blocks.destroyBlock([i, ay], state)
+      state.blocks.destroyBlock([i, ay])
     }
   }
   for (let i = ay; i < 13; i++) {
@@ -137,7 +134,7 @@ function detonate (this:Bomb, state:GameState) {
     else if (b.t === 'I') break
     else {
       this.directions.right++
-      state.blocks.destroyBlock([ax, i], state)
+      state.blocks.destroyBlock([ax, i])
     }
   }
   for (let i = ax; i < 11; i++) {
@@ -151,7 +148,7 @@ function detonate (this:Bomb, state:GameState) {
     else if (b.t === 'I') break
     else {
       this.directions.down++
-      state.blocks.destroyBlock([i, ay], state)
+      state.blocks.destroyBlock([i, ay])
     }
   }
   for (let i = ay; i > -1; i--) {
@@ -165,7 +162,7 @@ function detonate (this:Bomb, state:GameState) {
     else if (b.t === 'I') break
     else {
       this.directions.left++
-      state.blocks.destroyBlock([ax, i], state)
+      state.blocks.destroyBlock([ax, i])
     }
   }
 }
@@ -235,7 +232,7 @@ function startMove (this:Bomb, side:SIDES, state:GameState) {
   catch {}
   if (move) {
     playKickSound()
-    state.blocks.destroyBlock([ax, ay], state)
+    state.blocks.destroyBlock([ax, ay])
     this.collidable = false
     this.side = side
     this.moving = true
@@ -303,7 +300,7 @@ function moveLeft (this:Bomb, state:GameState) {
 }
 
 function setHolding (this:Bomb, playerIndex:number, state:GameState) {
-  state.blocks.destroyBlock(this.getAxes(), state)
+  state.blocks.destroyBlock(this.getAxes())
   this.playerIndex = playerIndex
   this.collidable = false
   this.holding = true
@@ -428,7 +425,7 @@ function tick (this:Bomb, state:GameState) {
 function render (this:Bomb, context:CanvasRenderingContext2D) {
   if (this.armed) {
     const { sx, sy } = animate(this, BOMB)
-    context.drawImage(this.sprite, sx, sy, BOMB.FRAME_WIDTH, BOMB.FRAME_HEIGHT, this.x, this.y, BOMB.FRAME_WIDTH, BOMB.FRAME_HEIGHT)
+    context.drawImage(Assets.bombSprite, sx, sy, BOMB.FRAME_WIDTH, BOMB.FRAME_HEIGHT, this.x, this.y, BOMB.FRAME_WIDTH, BOMB.FRAME_HEIGHT)
   }
   else {
     this.blast.render(context, this.directions, this.x, this.y)

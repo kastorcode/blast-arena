@@ -1,4 +1,5 @@
 import { GameState } from '~/game/entities/state'
+import { Assets } from '~/game/util/assets'
 
 interface Block {
   axes   : [number, number]
@@ -7,27 +8,21 @@ interface Block {
   finalY : number
 }
 
-interface BlockFillerProps {
-  sprite : HTMLImageElement
-}
-
 export interface BlockFiller {
   blocks       : Block[]
   currentBlock : number
   id           : string
-  sprite       : HTMLImageElement
   tick   : (state:GameState) => void
   render : (context:CanvasRenderingContext2D) => void
 }
 
 const SPEED = 4
 
-export function BlockFillerFactory (props:BlockFillerProps) : BlockFiller {
+export function BlockFillerFactory () : BlockFiller {
   const blockFiller:BlockFiller = {
     blocks: createBlocks(),
     currentBlock: 0,
-    id: 'blockFiller',
-    sprite: props.sprite
+    id: 'blockFiller'
   } as unknown as BlockFiller
   blockFiller.tick = tick.bind(blockFiller)
   blockFiller.render = render.bind(blockFiller)
@@ -80,5 +75,5 @@ function tick (this:BlockFiller, state:GameState) {
 function render (this:BlockFiller, context:CanvasRenderingContext2D) {
   const block = this.blocks[this.currentBlock]
   if (!block) return
-  context.drawImage(this.sprite, 0, 0, 16, 16, block.x, block.y, 16, 16)
+  context.drawImage(Assets.stageSprite, 0, 0, 16, 16, block.x, block.y, 16, 16)
 }

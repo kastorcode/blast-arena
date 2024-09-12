@@ -36,7 +36,7 @@ function tick (this:Timer, state:GameState) {
   this.elapsedTime = Date.now() - this.startTime
   this.remainingTime = this.totalTime - this.elapsedTime
   if (this.remainingTime <= 0) {
-    state.entities.add(BlockFillerFactory({sprite:state.stage.bg}))
+    state.entities.add(BlockFillerFactory())
     state.entities.remove(this)
   }
 }

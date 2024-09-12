@@ -5,12 +5,13 @@ import { BLOCK } from '~/game/animations/block'
 import { Bomb } from '~/game/entities/bomb'
 import { Bonus, BonusFactory } from '~/game/entities/bonus'
 import { GameState } from '~/game/entities/state'
+import { Assets } from '~/game/util/assets'
 import { isColliding, stopPlayer } from '~/game/util/collision'
 
 export interface Blocks {
   blocks : (Block|Bonus|BombBlock|null)[][]
   getBlock     : (axes:[number,number]) => Block|Bonus|BombBlock|null
-  destroyBlock : (axes:[number,number], state:GameState) => void
+  destroyBlock : (axes:[number,number]) => void
   putBlock     : (dto:BlockDTO, axes:[number,number]) => void
   putBomb      : (bomb:Bomb) => void
   tick         : (state:GameState) => void
@@ -77,11 +78,11 @@ function startDestroyBlock (this:Block) {
   this.tick = () => false
 }
 
-function nullifyBlock (this:Blocks['blocks'], axes:[number,number], state:GameState) {
+function nullifyBlock (this:Blocks['blocks'], axes:[number,number]) {
   const block = this[axes[0]][axes[1]] as Block
   if (block && block.b) {
     this[axes[0]][axes[1]] = BonusFactory({
-      axes, bonus:block.b, state, x:block.x, y:block.y
+      axes, bonus:block.b, x:block.x, y:block.y
     })
   }
   else {
@@ -91,8 +92,8 @@ function nullifyBlock (this:Blocks['blocks'], axes:[number,number], state:GameSt
 
 function putOneBlock (this:Blocks['blocks'], dto:BlockDTO, axes:[number,number]) {
   const block = createBlock(dto, axes) as Block
-  block.render = (context:CanvasRenderingContext2D, state:GameState) => {
-    context.drawImage(state.stage.bg, 0, 0, 16, 16, block.x, block.y, 16, 16)
+  block.render = (context:CanvasRenderingContext2D) => {
+    context.drawImage(Assets.stageSprite, 0, 0, 16, 16, block.x, block.y, 16, 16)
   }
   this[axes[0]][axes[1]] = block
 }
@@ -217,15 +218,15 @@ function tickPlayer (this:Blocks['blocks'], state:GameState) {
 function renderAndDestroy (this:Block, context:CanvasRenderingContext2D, state:GameState) {
   if (this.destroying) {
     if (Date.now() > this.destroyTime) {
-      state.blocks.destroyBlock(this.axes, state)
+      state.blocks.destroyBlock(this.axes)
     }
     else {
       const { sx, sy } = animate(this, BLOCK)
-      context.drawImage(state.stage.bg, sx, sy, BLOCK.FRAME_WIDTH, BLOCK.FRAME_HEIGHT, this.x, this.y, BLOCK.FRAME_WIDTH, BLOCK.FRAME_HEIGHT)
+      context.drawImage(Assets.stageSprite, sx, sy, BLOCK.FRAME_WIDTH, BLOCK.FRAME_HEIGHT, this.x, this.y, BLOCK.FRAME_WIDTH, BLOCK.FRAME_HEIGHT)
     }
   }
   else {
-    context.drawImage(state.stage.bg, 0, 208, TILE_SIZE, TILE_SIZE, this.x, this.y, TILE_SIZE, TILE_SIZE)
+    context.drawImage(Assets.stageSprite, 0, 208, TILE_SIZE, TILE_SIZE, this.x, this.y, TILE_SIZE, TILE_SIZE)
   }
 }
 

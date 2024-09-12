@@ -324,8 +324,7 @@ function placeBomb (this:Player, state:GameState) {
     axes,
     player     : this,
     playerIndex: this.index,
-    reach      : this.bombReach,
-    state
+    reach      : this.bombReach
   })
   state.blocks.putBomb(bomb)
   const dto:PlaceBombDTO = {

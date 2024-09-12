@@ -8,6 +8,7 @@ import { StageFactory } from '~/game/entities/stage'
 import { GameState } from '~/game/entities/state'
 import { TimerFactory } from '~/game/entities/timer'
 import { playBombSound } from '~/game/sound/bomb'
+import { Assets } from '~/game/util/assets'
 import socket from '~/services/socket'
 import { Pairing, Players, Timer } from './style'
 
@@ -69,11 +70,9 @@ export default function Canvas ({style}:CanvasProps) {
       blocks: BlocksFactory(dto.state.blocks),
       entities: EntitiesFactory(),
       players: PlayersFactory(dto.players),
-      stage: StageFactory({bg:dto.state.stage})
+      stage: StageFactory({name:dto.state.stage})
     }
-    const timer = TimerFactory()
-    timer.start()
-    state.entities.add(timer)
+    Assets.set(state)
     setState(state)
   }
 
@@ -85,7 +84,6 @@ export default function Canvas ({style}:CanvasProps) {
   function onPlaceBomb (dto:PlaceBombDTO) {
     if (dto.p === myself) return
     state?.entities.add(BombFactory({
-      state,
       axes: dto.a,
       id: dto.i,
       playerIndex: dto.p,
@@ -119,7 +117,7 @@ export default function Canvas ({style}:CanvasProps) {
   }
 
   function onNullifyBlock (dto:NullifyBlockDTO) {
-    state?.blocks.destroyBlock(dto.a, state)
+    state?.blocks.destroyBlock(dto.a)
   }
 
   function onKill (dto:KillDTO) {
@@ -164,8 +162,12 @@ export default function Canvas ({style}:CanvasProps) {
   useEffect(() => {
     if (!context || typeof myself !== 'number' || !state) return
     gameLoop(Date.now())
+    const timer = TimerFactory()
+    timer.start()
+    state.entities.add(timer)
+    Assets.start()
     return () => {
-      state.stage.stopBgSound()
+      Assets.stop()
     }
   }, [context, myself, state])
 
