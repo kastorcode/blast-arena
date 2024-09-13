@@ -102,7 +102,7 @@ function detonate (this:Bomb, state:GameState) {
   playBlastSound()
   if (this.holding) {
     if (this.playerIndex === state.players.myself!.index) {
-      state.players.myself!.kill(true, state)
+      state.players.myself!.kill(true)
     }
     this.stopMove(state)
   }
@@ -172,25 +172,25 @@ function checkPlayerCollision (this:Bomb, state:GameState) {
   const [ax, ay] = this.getAxes()
   for (let i = this.directions.up - 1; i > -1; i--) {
     if (px === ax - i && py === ay) {
-      state.players.myself!.kill(true, state)
+      state.players.myself!.kill(true)
       return
     }
   }
   for (let i = this.directions.down - 1; i > -1; i--) {
     if (px === ax + i && py === ay) {
-      state.players.myself!.kill(true, state)
+      state.players.myself!.kill(true)
       return
     }
   }
   for (let i = this.directions.left - 1; i > -1; i--) {
     if (px === ax && py === ay - i) {
-      state.players.myself!.kill(true, state)
+      state.players.myself!.kill(true)
       return
     }
   }
   for (let i = this.directions.right - 1; i > -1; i--) {
     if (px === ax && py === ay + i) {
-      state.players.myself!.kill(true, state)
+      state.players.myself!.kill(true)
       return
     }
   }

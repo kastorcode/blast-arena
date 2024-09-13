@@ -40,6 +40,17 @@ export default function SiteApp ({ children } : SiteAppProps) {
     await call.createOffer()
   }
 
+  function handleLobby () {
+    if (lobby) return
+    const lobbyParam = searchParams.get('lobby')
+    if (lobbyParam) {
+      socket.emit('change_lobby', lobbyParam)
+    }
+    else {
+      socket.emit('create_lobby')
+    }
+  }
+
   useEffect(() => {
     if (booting || user.nick) return
     randomuser().then(randomnick => {
@@ -63,13 +74,9 @@ export default function SiteApp ({ children } : SiteAppProps) {
   }, [options])
 
   useEffect(() => {
-    if (lobby) return
-    const lobbyParam = searchParams.get('lobby')
-    if (lobbyParam) {
-      socket.emit('change_lobby', lobbyParam)
-    }
-    else {
-      socket.emit('create_lobby')
+    window.addEventListener('load', handleLobby)
+    return () => {
+      window.removeEventListener('load', handleLobby)
     }
   }, [lobby])
 

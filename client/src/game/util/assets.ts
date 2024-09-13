@@ -1,4 +1,5 @@
 import { GameState } from '~/game/entities/state'
+import socket from '~/services/socket'
 
 export class Assets {
 
@@ -22,6 +23,10 @@ export class Assets {
     this.stageSprite.src = `/sprites/stages/${state.stage.name}.png`
 
     this.bgSound = new Audio(`/sound/stages/${state.stage.name}.wav`)
+    this.bgSound.oncanplaythrough = () => {
+      this.bgSound.oncanplaythrough = null
+      socket.emit('ready')
+    }
   }
 
   public static start () {

@@ -18,8 +18,8 @@ interface LobbyProps {
 
 export default function Lobby ({ lobby, setShowGame, setShowOptions } : LobbyProps) {
 
-  const options = useSelector<any,OptionsDTO>(state => state.options)
   const dispatch = useDispatch()
+  const options = useSelector<any,OptionsDTO>(state => state.options)
 
   function handleOpenGame () {
     socket.off('open_game', handleOpenGame)
@@ -31,7 +31,7 @@ export default function Lobby ({ lobby, setShowGame, setShowOptions } : LobbyPro
     return () => {
       socket.off('open_game', handleOpenGame)
     }
-  })
+  }, [])
 
   return (
     <Container>

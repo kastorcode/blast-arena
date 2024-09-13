@@ -27,7 +27,7 @@ function tick (this:Pass, state:GameState) {
     state.entities.remove(this)
     state.players.myself!.collidable = true
     if (state.blocks.getBlock(state.players.myself!.getAxes())) {
-      state.players.myself!.kill(true, state)
+      state.players.myself!.kill(true)
     }
   }
 }

@@ -18,8 +18,9 @@ interface CanvasProps {
 
 export default function Canvas ({style}:CanvasProps) {
 
-  const fpsRef = useRef({ fps:0, lastTime:0 })
   const canvasRef = useRef<HTMLCanvasElement>(null)
+  const fpsRef = useRef({fps:0, lastTime:0})
+  const readyRef = useRef(0)
   const [context, setContext] = useState<CanvasRenderingContext2D>()
   const [myself, setMyself] = useState<number>()
   const [state, setState] = useState<GameState>()
@@ -65,15 +66,25 @@ export default function Canvas ({style}:CanvasProps) {
 
   function startGame (dto:StartGameDTO) {
     socket.off('start_game', startGame)
-    const state = {
+    setState({
       ...dto.state,
       blocks: BlocksFactory(dto.state.blocks),
       entities: EntitiesFactory(),
       players: PlayersFactory(dto.players),
       stage: StageFactory({name:dto.state.stage})
-    }
-    Assets.set(state)
-    setState(state)
+    })
+  }
+
+  function onReady () {
+    readyRef.current++
+    if (!state) return
+    if (readyRef.current < state.players.players.length) return
+    socket.off('ready', onReady)
+    const timer = TimerFactory()
+    timer.start()
+    state.entities.add(timer)
+    Assets.start()
+    state.players.myself!.active = true
   }
 
   function onMove (dto:MoveDTO) {
@@ -122,12 +133,13 @@ export default function Canvas ({style}:CanvasProps) {
 
   function onKill (dto:KillDTO) {
     if (dto.p === myself) return
-    state?.players.players[dto.p].kill(false, state)
+    state?.players.players[dto.p].kill(false)
   }
 
   useEffect(() => {
     socket.on('myself', setMyself)
     socket.on('start_game', startGame)
+    socket.on('ready', onReady)
     socket.on('mv', onMove)
     socket.on('pb', onPlaceBomb)
     socket.on('mb', onMoveBomb)
@@ -138,6 +150,7 @@ export default function Canvas ({style}:CanvasProps) {
     return () => {
       socket.off('myself', setMyself)
       socket.off('start_game', startGame)
+      socket.off('ready', onReady)
       socket.off('mv', onMove)
       socket.off('pb', onPlaceBomb)
       socket.off('mb', onMoveBomb)
@@ -161,11 +174,8 @@ export default function Canvas ({style}:CanvasProps) {
 
   useEffect(() => {
     if (!context || typeof myself !== 'number' || !state) return
+    Assets.set(state)
     gameLoop(Date.now())
-    const timer = TimerFactory()
-    timer.start()
-    state.entities.add(timer)
-    Assets.start()
     return () => {
       Assets.stop()
     }

@@ -204,7 +204,7 @@ function KillBonus (props:BonusProps) : Bonus {
     y    : props.y,
     tick: (state:GameState) => {
       collided(state, kill, () => {
-        state.players.myself!.kill(true, state)
+        state.players.myself!.kill(true)
       })
     },
     render: (context:CanvasRenderingContext2D) => {

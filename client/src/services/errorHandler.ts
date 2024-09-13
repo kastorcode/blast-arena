@@ -38,6 +38,9 @@ const handler:{[key:string]:Function|undefined} = {
     toast.error('Lobby not found', toastOptions)
     redirectToHomePage()
   },
+  [ERRORS.PAGE_LOADING]: () => {
+    toast.error('The page is loading', toastOptions)
+  },
   [ERRORS.SET_USER_FAILED]: () => {
     toast.error('Failed to update user', toastOptions)
   }
@@ -49,7 +52,7 @@ function redirectToHomePage () {
   }, toastOptions.autoClose as number)
 }
 
-export function errorHandler (error:string) {
+export function errorHandler (error:number) {
   const fn = handler[error]
   if (fn) fn()
   else    console.error(error)

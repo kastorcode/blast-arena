@@ -1,6 +1,6 @@
 import { Server } from 'socket.io'
 import { onFlingBomb, onHoldBomb, onKill, onMove, onMoveBomb, onNullifyBlock, onPlaceBomb } from '~/game'
-import { changeLobby, createLobby, exitPairing, joinRoom, onDisconnect, sendToLobby, setUser } from '~/manager'
+import { changeLobby, createLobby, exitPairing, joinRoom, onDisconnect, onReady, sendToLobby, setUser } from '~/manager'
 
 export default function ioListener (io:Server) {
 
@@ -19,6 +19,7 @@ export default function ioListener (io:Server) {
     socket.on('create_lobby', () => createLobby(io, socket))
     socket.on('change_lobby', lobbyId => changeLobby(io, socket, lobbyId))
     socket.on('join_room',    dto => joinRoom(io, socket, dto))
+    socket.on('ready',        () => onReady(io, socket))
     socket.on('exit_pairing', () => exitPairing(socket))
     socket.on('disconnect',   () => onDisconnect(io, socket))
 

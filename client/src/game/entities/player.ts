@@ -21,6 +21,7 @@ interface PlayerProps extends PlayerDTO {
 }
 
 export interface Player {
+  active     : boolean
   anim       : AnimControl['anim']
   bombId     : string
   bombKeys   : {[key:string]:'B'}
@@ -62,13 +63,14 @@ export interface Player {
   placeBomb            : (state:GameState) => void
   holdBomb             : (state:GameState) => void
   flingBomb            : (state:GameState) => void
-  kill                 : (emit:boolean, state:GameState) => void
+  kill                 : (emit:boolean) => void
   tick                 : (state:GameState) => void
   render               : (context:CanvasRenderingContext2D) => void
 }
 
 export function PlayerFactory (props:PlayerProps) : Player {
   const player : Player = {
+    active: false,
     anim: {frameCurrent:0, lastRender:0, sum:true},
     bombKeys: {
       'Z': 'B',
@@ -136,7 +138,7 @@ function getAxes (this:Player) : [number, number] {
 }
 
 function addInputListener (this:Player, state:GameState) {
-  this.onVisibilityChange = () => onVisibilityChange.call(this, state)
+  this.onVisibilityChange = () => onVisibilityChange.call(this)
   document.addEventListener('visibilitychange', this.onVisibilityChange)
   this.keydownListener = event => keydownListener.call(this, event, state)
   document.addEventListener('keydown', this.keydownListener)
@@ -157,13 +159,13 @@ function removeInputListener (this:Player) {
   window.removeEventListener('gamepadconnected', this.addGamepadSupport)
 }
 
-function onVisibilityChange (this:Player, state:GameState) {
-  if (document.hidden) this.kill(true, state)
+function onVisibilityChange (this:Player) {
+  if (document.hidden && this.active) this.kill(true)
 }
 
 function keydownListener (this:Player, event:KeyboardEvent, state:GameState) {
   event.preventDefault()
-  if (this.removeTime) return
+  if (!this.active) return
   const key = event.key.toUpperCase()
   if (this.moveKeys[key]) {
     this.startMove(this.moveKeys[key])
@@ -178,7 +180,7 @@ function keydownListener (this:Player, event:KeyboardEvent, state:GameState) {
 
 function keyupListener (this:Player, event:KeyboardEvent) {
   event.preventDefault()
-  if (this.removeTime) return
+  if (!this.active) return
   const key = event.key.toUpperCase()
   if (this.moveKeys[key]) this.stopMove(this.moveKeys[key])
 }
@@ -363,9 +365,10 @@ function flingBomb (this:Player, state:GameState) {
   bomb.startFling(this.side)
 }
 
-function kill (this:Player, emit:boolean, state:GameState) {
+function kill (this:Player, emit:boolean) {
   if (this.removeTime) return
   this.removeTime = Date.now() + 350
+  this.active = false
   this.moving = 0
   this.holding = 0
   this.collidable = false

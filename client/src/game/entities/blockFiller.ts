@@ -69,7 +69,7 @@ function tick (this:BlockFiller, state:GameState) {
     this.currentBlock++
     const playerAxes = state.players.myself!.getAxes()
     if (block.axes[0] === playerAxes[0] && block.axes[1] === playerAxes[1]) {
-      state.players.myself?.kill(true, state)
+      state.players.myself?.kill(true)
     }
   }
 }

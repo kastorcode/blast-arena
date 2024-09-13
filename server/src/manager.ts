@@ -64,6 +64,10 @@ export async function joinRoom (io:Server, socket:Socket, dto:JoinRoomDTO) {
   }
 }
 
+export function onReady (io:Server, socket:Socket) {
+  io.to(socket.data.roomId).emit('ready')
+}
+
 export function onDisconnect (io:Server, socket:Socket) {
   updateRoomQueue(socket)
   const dto = updateLobbyFactory(io, socket.data.lobbyId)
