@@ -41,6 +41,7 @@ export function GamepadFactory (props:GamepadProps) : GamepadHost {
 }
 
 function tick (this:GamepadHost, state:GameState) {
+  if (!this.player.active) return
   const gamepad = navigator.getGamepads()[this.index]
   if (!gamepad) return
   let useAxes = true

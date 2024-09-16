@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useSelector } from 'react-redux'
 import { Outlet, useOutlet } from 'react-router-dom'
 import { LobbyDTO } from '#/dto'
@@ -7,14 +7,16 @@ import Lobby from '~/site/components/lobby'
 import Menu from '~/site/components/menu'
 import Options from '~/site/components/options'
 import SiteApp from '~/site/components/siteApp'
+import { isInternetSlow } from '~/site/util/net'
 import { Container } from './style'
 
 export default function HomePage () {
 
   const lobby = useSelector<any,LobbyDTO|null>(state => state.lobby)
+  const outlet = useOutlet()
   const [showGame, setShowGame] = useState(false)
   const [showOptions, setShowOptions] = useState(false)
-  const outlet = useOutlet()
+  const containerRef = useRef<HTMLDivElement>(null)
 
   function GetPage () {
     if (outlet) return (
@@ -29,12 +31,17 @@ export default function HomePage () {
     return null
   }
 
+  useEffect(() => {
+    if (!containerRef.current || isInternetSlow()) return
+    containerRef.current!.style.backgroundImage = 'url(/images/bg/0.jpg)'
+  })
+
   return (
     <SiteApp>
       { showGame ? (
         <GameApp setShowGame={setShowGame} />
       ) : (
-        <Container>
+        <Container ref={containerRef}>
           {!showOptions && <Menu/>}
           <GetPage/>
         </Container>
