@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { toast } from 'react-toastify'
 import { FlingBombDTO, HoldBombDTO, KillDTO, MoveBombDTO, MoveDTO, NullifyBlockDTO, PlaceBombDTO, StartGameDTO } from '#/dto'
 import { BlocksFactory } from '~/game/entities/block'
 import { Bomb, BombFactory } from '~/game/entities/bomb'
@@ -8,17 +9,20 @@ import { StageFactory } from '~/game/entities/stage'
 import { GameState } from '~/game/entities/state'
 import { TimerFactory } from '~/game/entities/timer'
 import { playBombSound } from '~/game/sound/bomb'
+import { playWinSound, stopWinSound } from '~/game/sound/win'
 import { Assets } from '~/game/util/assets'
 import socket from '~/services/socket'
 import { Pairing, Players, Timer } from './style'
 
 interface CanvasProps {
   style : React.CSSProperties
+  setShowGame : React.Dispatch<React.SetStateAction<boolean>>
 }
 
-export default function Canvas ({style}:CanvasProps) {
+export default function Canvas ({style, setShowGame}:CanvasProps) {
 
   const canvasRef = useRef<HTMLCanvasElement>(null)
+  const endGameTimeout = useRef<NodeJS.Timeout>()
   const fpsRef = useRef({fps:0, lastTime:0})
   const readyRef = useRef(0)
   const [context, setContext] = useState<CanvasRenderingContext2D>()
@@ -84,7 +88,7 @@ export default function Canvas ({style}:CanvasProps) {
     timer.start()
     state.entities.add(timer)
     Assets.start()
-    state.players.myself!.active = true
+    state.players.players.forEach(p => p.active = true)
   }
 
   function onMove (dto:MoveDTO) {
@@ -132,8 +136,37 @@ export default function Canvas ({style}:CanvasProps) {
   }
 
   function onKill (dto:KillDTO) {
-    if (dto.p === myself) return
-    state?.players.players[dto.p].kill(false)
+    if (dto.p !== myself) {
+      state?.players.players[dto.p].kill(false)
+    }
+    checkWin()
+  }
+
+  function checkWin () {
+    let active = 0
+    const players = state!.players.players
+    players.forEach(p => {
+      if (p.active) active++
+    })
+    if (active !== 1) return
+    const timer = state!.entities.get('timer')
+    timer && state!.entities.remove(timer)
+    Assets.stop()
+    const timeout = 750
+    for (const i in players) {
+      if (players[i].active) {
+        if (players[i].myself) {
+          endGameTimeout.current = setTimeout(() => {
+            toast.success('Victory Royale!', {icon:'👑',theme:'colored',autoClose:6000})
+            playWinSound(() => setShowGame(false))
+          }, timeout)
+        }
+        else {
+          endGameTimeout.current = setTimeout(() => setShowGame(false), timeout)
+        }
+        break
+      }
+    }
   }
 
   useEffect(() => {
@@ -177,6 +210,8 @@ export default function Canvas ({style}:CanvasProps) {
     Assets.set(state)
     gameLoop(Date.now())
     return () => {
+      clearTimeout(endGameTimeout.current)
+      stopWinSound()
       Assets.stop()
     }
   }, [context, myself, state])

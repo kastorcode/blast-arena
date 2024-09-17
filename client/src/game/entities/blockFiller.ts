@@ -59,6 +59,11 @@ function createBlocks(): Block[] {
 function tick (this:BlockFiller, state:GameState) {
   if (this.currentBlock === this.blocks.length) {
     state.entities.remove(this)
+    if (state.players.myself!.collidable) {
+      if (state.blocks.getBlock(state.players.myself!.getAxes())) {
+        state.players.myself!.kill(true)
+      }
+    }
     return
   }
   const block = this.blocks[this.currentBlock]

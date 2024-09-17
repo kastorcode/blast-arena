@@ -28,7 +28,7 @@ export class Assets {
       this.stageSprite.onload = this.emitReady.bind(this)
     }
     else {
-      this.bgSound = new Audio(`/sound/stages/${state.stage.name}.wav`)
+      this.bgSound = new Audio(`/sound/stages/${state.stage.name}.mp3`)
       this.bgSound.oncanplaythrough = this.emitReady.bind(this)
     }
   }
