@@ -8,7 +8,7 @@ interface NetworkInformation extends EventTarget {
 export function isInternetSlow () {
   // @ts-expect-error
   const info = navigator.connection as NetworkInformation
-  if (!info || info.saveData || info.rtt > 1000 || info.downlink < 4) {
+  if (!info || info.saveData || info.rtt > 1000 || info.downlink < 2) {
     return true
   }
   return false

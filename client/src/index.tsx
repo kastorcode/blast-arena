@@ -1,4 +1,5 @@
 import 'react-toastify/dist/ReactToastify.min.css'
+import '~/prototype/array'
 import React from 'react'
 import ReactDOM from 'react-dom'
 import { Provider } from 'react-redux'

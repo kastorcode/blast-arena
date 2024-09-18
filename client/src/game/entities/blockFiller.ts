@@ -82,5 +82,5 @@ function tick (this:BlockFiller, state:GameState) {
 function render (this:BlockFiller, context:CanvasRenderingContext2D) {
   const block = this.blocks[this.currentBlock]
   if (!block) return
-  context.drawImage(Assets.stageSprite, 0, 0, 16, 16, block.x, block.y, 16, 16)
+  context.drawImage(Assets.stageSprite, 0, 208, 16, 16, block.x, block.y, 16, 16)
 }

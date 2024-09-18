@@ -2,7 +2,7 @@ import { Bonus } from '~/game/entities/bonus'
 
 const PATH = '/sound/bonus/'
 
-const EXT = '.wav'
+const EXT = '.mp3'
 
 const SOUNDS = {
   1:new Audio(`${PATH}1${EXT}`),

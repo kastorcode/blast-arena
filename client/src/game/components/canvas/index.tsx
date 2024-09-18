@@ -151,6 +151,8 @@ export default function Canvas ({style, setShowGame}:CanvasProps) {
     if (active !== 1) return
     const timer = state!.entities.get('timer')
     timer && state!.entities.remove(timer)
+    const blockFiller = state!.entities.get('blockFiller')
+    blockFiller && state!.entities.remove(blockFiller)
     Assets.stop()
     const timeout = 750
     for (const i in players) {

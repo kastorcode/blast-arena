@@ -93,7 +93,7 @@ function nullifyBlock (this:Blocks['blocks'], axes:[number,number]) {
 function putOneBlock (this:Blocks['blocks'], dto:BlockDTO, axes:[number,number]) {
   const block = createBlock(dto, axes) as Block
   block.render = (context:CanvasRenderingContext2D) => {
-    context.drawImage(Assets.stageSprite, 0, 0, 16, 16, block.x, block.y, 16, 16)
+    context.drawImage(Assets.stageSprite, 0, 208, 16, 16, block.x, block.y, 16, 16)
   }
   this[axes[0]][axes[1]] = block
 }
@@ -226,7 +226,7 @@ function renderAndDestroy (this:Block, context:CanvasRenderingContext2D, state:G
     }
   }
   else {
-    context.drawImage(Assets.stageSprite, 0, 208, TILE_SIZE, TILE_SIZE, this.x, this.y, TILE_SIZE, TILE_SIZE)
+    context.drawImage(Assets.stageSprite, 16, 208, TILE_SIZE, TILE_SIZE, this.x, this.y, TILE_SIZE, TILE_SIZE)
   }
 }
 

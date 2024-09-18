@@ -1,4 +1,4 @@
-const SOUND = new Audio('/sound/kill/0.wav')
+const SOUND = new Audio('/sound/kill/0.mp3')
 
 export function playKillSound () {
   SOUND.currentTime = 0
