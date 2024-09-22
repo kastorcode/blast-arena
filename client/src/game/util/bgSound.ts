@@ -22,7 +22,12 @@ const SOUNDS:{[key:number]:number[]} = {
   16: [0,1],
   17: [0,1],
   18: [0,1],
-  19: [0,1]
+  19: [0,1],
+  20: [0,1],
+  21: [0,1],
+  22: [0,1],
+  23: [0,1],
+  24: [0,1]
 }
 
 export function getBgSound (name:number) {
