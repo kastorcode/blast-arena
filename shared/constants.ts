@@ -6,7 +6,7 @@ export const BOMBS = 8
 
 export const BOMB_SPEED = 2
 
-export const BONUS = 1
+export const BONUS = 5
 
 export const BONUSES = [
   0,  // none

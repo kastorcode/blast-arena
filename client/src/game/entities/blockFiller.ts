@@ -60,8 +60,11 @@ function tick (this:BlockFiller, state:GameState) {
   if (this.currentBlock === this.blocks.length) {
     state.entities.remove(this)
     if (state.players.myself!.collidable) {
-      if (state.blocks.getBlock(state.players.myself!.getAxes())) {
-        state.players.myself!.kill(true)
+      const block = state.blocks.getBlock(state.players.myself!.getAxes())
+      if (block) {
+        if (block.t === 'D' || block.t === 'I') {
+          state.players.myself!.kill(true)
+        }
       }
     }
     return
