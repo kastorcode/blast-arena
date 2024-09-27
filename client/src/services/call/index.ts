@@ -1,5 +1,5 @@
 import { CallAnswerDTO, CallOfferDTO, DisconnectedDTO, IceCandidateDTO } from '#/dto'
-import socket from '~/services/socket'
+import { emitCallAnswer, emitCallOffer, socket } from '~/services/socket'
 import { Peer, PeerFactory } from './peer'
 
 interface Call {
@@ -75,8 +75,7 @@ async function createOffer (this:Call) {
   if (!peer) return
   const offer = await peer.createOffer()
   await peer.setLocalDescription(offer)
-  const dto:CallOfferDTO = {offer, socketId:peer.id}
-  socket.emit('call_offer', dto)
+  emitCallOffer({offer, socketId:peer.id})
 }
 
 async function onCallOffer (this:Call, dto:CallOfferDTO) {
@@ -90,8 +89,7 @@ async function onCallOffer (this:Call, dto:CallOfferDTO) {
   peer.addTrack(this.stream)
   const answer = await peer.createAnswer()
   await peer.setLocalDescription(answer)
-  const cad:CallAnswerDTO = {answer, socketId:peer.id}
-  socket.emit('call_answer', cad)
+  emitCallAnswer({answer, socketId:peer.id})
 }
 
 async function onCallAnswer (this:Call, dto:CallAnswerDTO) {

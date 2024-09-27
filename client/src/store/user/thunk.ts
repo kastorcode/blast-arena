@@ -1,16 +1,16 @@
 import { Dispatch } from 'redux'
 import { UserDTO } from '#/dto'
-import socket from '~/services/socket'
+import { emitSetUser } from '~/services/socket'
 import store from '~/store'
 import { setUser } from './actions'
 import { dto } from './reducer'
 
 const KEY = 'user'
 
-export function bootUser (dispatch : Dispatch) {
+export function bootUser (dispatch:Dispatch) {
   const user = loadUser()
   if (user) {
-    socket.emit('set_user', user)
+    emitSetUser(user)
     dispatch(setUser(user))
   }
 }

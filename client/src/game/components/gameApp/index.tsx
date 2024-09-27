@@ -3,7 +3,7 @@ import { useSelector } from 'react-redux'
 import Canvas from '~/game/components/canvas'
 import TouchControls from '~/game/components/touchControls'
 import useIsPortrait from '~/hooks/useIsPortrait'
-import socket from '~/services/socket'
+import { emitExitPairing } from '~/services/socket'
 import { rootElement } from '~/site/view/elements'
 import { OptionsDTO } from '~/store/options/reducer'
 import { Back } from './assets'
@@ -51,7 +51,7 @@ export default function GameApp ({setShowGame}:GameAppProps) {
       rootElement.requestFullscreen()
     }
     return () => {
-      socket.emit('exit_pairing')
+      emitExitPairing()
       document.removeEventListener('touchmove', preventDefault)
       window.removeEventListener('popstate', handleBackButton)
     }

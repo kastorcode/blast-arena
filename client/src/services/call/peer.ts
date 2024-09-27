@@ -1,5 +1,4 @@
-import { IceCandidateDTO } from '#/dto'
-import socket from '~/services/socket'
+import { emitIceCandidate } from '~/services/socket'
 
 interface PeerProps {
   id : string
@@ -47,8 +46,7 @@ function ontrack (this:Peer, event:RTCTrackEvent) {
 
 function onicecandidate (this:Peer, event:RTCPeerConnectionIceEvent) {
   if (!event.candidate) return
-  const dto:IceCandidateDTO = {candidate:event.candidate, socketId:this.id}
-  socket.emit('ice_candidate', dto)
+  emitIceCandidate({candidate:event.candidate, socketId:this.id})
 }
 
 function addTrack (this:Peer, stream:MediaStream) {

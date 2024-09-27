@@ -8,7 +8,7 @@ import { CallFactory } from '~/services/call'
 import { errorHandler } from '~/services/errorHandler'
 import { EVENTS } from '~/services/events'
 import randomuser from '~/services/randomuser'
-import socket from '~/services/socket'
+import { emitChangeLobby, emitCreateLobby, emitSetUser, socket } from '~/services/socket'
 import { updateLobby } from '~/store/lobby/actions'
 import { OptionsDTO } from '~/store/options/reducer'
 import { saveOptions } from '~/store/options/thunk'
@@ -44,10 +44,10 @@ export default function SiteApp ({ children } : SiteAppProps) {
     if (lobby) return
     const lobbyParam = searchParams.get('lobby')
     if (lobbyParam) {
-      socket.emit('change_lobby', lobbyParam)
+      emitChangeLobby(lobbyParam)
     }
     else {
-      socket.emit('create_lobby')
+      emitCreateLobby()
     }
   }
 
@@ -64,7 +64,7 @@ export default function SiteApp ({ children } : SiteAppProps) {
       // @ts-ignore
       if (!user[key]) return
     }
-    socket.emit('set_user', user)
+    emitSetUser(user)
     saveUser()
   }, [user])
 

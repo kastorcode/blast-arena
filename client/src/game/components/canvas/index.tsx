@@ -11,7 +11,7 @@ import { TimerFactory } from '~/game/entities/timer'
 import { playBombSound } from '~/game/sound/bomb'
 import { playWinSound, stopWinSound } from '~/game/sound/win'
 import { Assets } from '~/game/util/assets'
-import socket from '~/services/socket'
+import { socket } from '~/services/socket'
 import { Pairing, Players, Timer } from './style'
 
 interface CanvasProps {

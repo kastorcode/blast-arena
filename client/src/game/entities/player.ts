@@ -1,5 +1,5 @@
 import { PRESS_INTERVAL, TILE_SIZE } from '#/constants'
-import { FlingBombDTO, HoldBombDTO, KillDTO, MoveDTO, PlaceBombDTO, PlayerDTO, SIDES } from '#/dto'
+import { MoveDTO, PlayerDTO, SIDES } from '#/dto'
 import { animate, AnimControl } from '~/game/animations/animation'
 import { PLAYER_D, PLAYER_DH, PLAYER_K, PLAYER_L, PLAYER_LH, PLAYER_R, PLAYER_RH, PLAYER_U, PLAYER_UH } from '~/game/animations/player'
 import { Bomb, BombFactory } from '~/game/entities/bomb'
@@ -7,7 +7,7 @@ import { GamepadFactory } from '~/game/entities/gamepad'
 import { GameState } from '~/game/entities/state'
 import { playBombSound } from '~/game/sound/bomb'
 import { playKillSound } from '~/game/sound/kill'
-import socket from '~/services/socket'
+import { emitFlingBomb, emitHoldBomb, emitKill, emitMove, emitPlaceBomb } from '~/services/socket'
 
 interface LastPress {
   bomb : number
@@ -213,8 +213,7 @@ function moveTick (this:Player, state:GameState) {
   this.moves[this.side]()
   if (!this.myself) return
   state.blocks.tick(state)
-  const dto:MoveDTO = {h:this.holding, m:this.moving, p:this.index, s:this.side, x:this.x, y:this.y}
-  socket.emit('mv', dto)
+  emitMove({h:this.holding, m:this.moving, p:this.index, s:this.side, x:this.x, y:this.y})
 }
 
 function moveDown (this:Player) {
@@ -287,8 +286,7 @@ function stopMove (this:Player, side:SIDES) {
       break
     }
   }
-  const dto:MoveDTO = {h:this.holding, m:this.moving, p:this.index, s:this.side, x:this.x, y:this.y}
-  socket.emit('mv', dto)
+  emitMove({h:this.holding, m:this.moving, p:this.index, s:this.side, x:this.x, y:this.y})
 }
 
 function invertControls (this:Player) {
@@ -329,15 +327,14 @@ function placeBomb (this:Player, state:GameState) {
     reach      : this.bombReach
   })
   state.blocks.putBomb(bomb)
-  const dto:PlaceBombDTO = {
+  emitPlaceBomb({
     a: axes,
     i: bomb.id,
     p: bomb.playerIndex,
     r: bomb.reach,
     x: bomb.x,
     y: bomb.y
-  }
-  socket.emit('pb', dto)
+  })
   state.entities.add(bomb)
   playBombSound()
 }
@@ -348,8 +345,7 @@ function holdBomb (this:Player, state:GameState) {
     this.holding = 1
     this.bombId = block.id
     const bomb = state.entities.get(block.id) as Bomb
-    const dto:HoldBombDTO = {i:bomb.id,p:this.index}
-    socket.emit('hb', dto)
+    emitHoldBomb({i:bomb.id,p:this.index})
     bomb.setHolding(this.index, state)
   }
   else {
@@ -360,8 +356,7 @@ function holdBomb (this:Player, state:GameState) {
 function flingBomb (this:Player, state:GameState) {
   this.holding = 0
   const bomb = state.entities.get(this.bombId) as Bomb
-  const dto:FlingBombDTO = {i:bomb.id,p:this.index,s:this.side,x:this.x,y:this.y-9}
-  socket.emit('fb', dto)
+  emitFlingBomb({i:bomb.id,p:this.index,s:this.side,x:this.x,y:this.y-9})
   bomb.startFling(this.side)
 }
 
@@ -385,8 +380,7 @@ function kill (this:Player, emit:boolean) {
   playKillSound()
   if (!emit) return
   this.removeGamepadSupport()
-  const dto:KillDTO = {p:this.index}
-  socket.emit('kl', dto)
+  emitKill({p:this.index})
 }
 
 function tick (this:Player, state:GameState) {

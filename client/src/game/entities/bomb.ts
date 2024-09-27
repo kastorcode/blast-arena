@@ -1,5 +1,5 @@
 import { BOMB_MOVE, BOMB_SPEED, TILE_SIZE } from '#/constants'
-import { MoveBombDTO, SIDES } from '#/dto'
+import { SIDES } from '#/dto'
 import { animate, AnimControl } from '~/game/animations/animation'
 import { BOMB } from '~/game/animations/bomb'
 import { Blast, BlastFactory, Directions } from '~/game/entities/blast'
@@ -10,7 +10,7 @@ import { playFlingSound } from '~/game/sound/fling'
 import { playKickSound } from '~/game/sound/kick'
 import { Assets } from '~/game/util/assets'
 import { isColliding, stopPlayer } from '~/game/util/collision'
-import socket from '~/services/socket'
+import { emitMoveBomb } from '~/services/socket'
 
 interface BombProps {
   axes        : [number, number]
@@ -403,8 +403,7 @@ function tick (this:Bomb, state:GameState) {
     if (this.collidable) {
       if (isColliding(state.players.myself!, this)) {
         if (state.players.myself!.kick) {
-          const dto:MoveBombDTO = {i:this.id,p:this.playerIndex,s:state.players.myself!.side}
-          socket.emit('mb', dto)
+          emitMoveBomb({i:this.id,p:this.playerIndex,s:state.players.myself!.side})
           this.startMove(state.players.myself!.side, state)
         }
         stopPlayer(state.players.myself!, this)

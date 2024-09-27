@@ -1,7 +1,6 @@
 import { TILE_SIZE } from '#/constants'
-import { MoveDTO } from '#/dto'
 import { Player } from '~/game/entities/player'
-import socket from '~/services/socket'
+import { emitMove } from '~/services/socket'
 
 interface Collision {
   x : number
@@ -21,8 +20,7 @@ export function isCollidingForced (p:Player, o:Collision) : boolean {
 export function stopPlayer (p:Player, o:Collision) {
   p.moving = 0
   playerCollisions[collisionSide(p, o)](p, o)
-  const dto:MoveDTO = {h:p.holding, m:p.moving, p:p.index, s:p.side, x:p.x, y:p.y}
-  socket.emit('mv', dto)
+  emitMove({h:p.holding, m:p.moving, p:p.index, s:p.side, x:p.x, y:p.y})
 }
 
 const playerCollisions = {

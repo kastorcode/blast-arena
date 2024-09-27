@@ -1,6 +1,6 @@
 import { GameState } from '~/game/entities/state'
 import { getBgSound } from '~/game/util/bgSound'
-import socket from '~/services/socket'
+import { emitReady } from '~/services/socket'
 import { isInternetSlow } from '~/site/util/net'
 
 export class Assets {
@@ -39,7 +39,7 @@ export class Assets {
     if (this.bgSound) {
       this.bgSound.oncanplaythrough = null
     }
-    socket.emit('ready')
+    emitReady()
   }
 
   public static start () {
