@@ -1,6 +1,7 @@
 import { GameState } from '~/game/entities/state'
 import { playBlockSound } from '~/game/sound/block'
 import { Assets } from '~/game/util/assets'
+import { isOnBlock } from '~/game/util/block'
 
 interface Block {
   axes   : [number, number]
@@ -59,13 +60,8 @@ function createBlocks(): Block[] {
 function tick (this:BlockFiller, state:GameState) {
   if (this.currentBlock === this.blocks.length) {
     state.entities.remove(this)
-    if (state.players.myself!.collidable) {
-      const block = state.blocks.getBlock(state.players.myself!.getAxes())
-      if (block) {
-        if (block.t === 'D' || block.t === 'I') {
-          state.players.myself!.kill(true)
-        }
-      }
+    if (isOnBlock(state)) {
+      state.players.myself!.kill(true)
     }
     return
   }

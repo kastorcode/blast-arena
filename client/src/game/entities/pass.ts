@@ -1,4 +1,5 @@
 import { GameState } from '~/game/entities/state'
+import { isOnBlock } from '~/game/util/block'
 
 interface PassProps {
   state : GameState
@@ -26,7 +27,7 @@ function tick (this:Pass, state:GameState) {
   if (Date.now() > this.removeTime) {
     state.entities.remove(this)
     state.players.myself!.collidable = true
-    if (state.blocks.getBlock(state.players.myself!.getAxes())) {
+    if (isOnBlock(state)) {
       state.players.myself!.kill(true)
     }
   }
