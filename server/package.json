@@ -3,9 +3,9 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "build": "npx tsc",
+    "build": "./build.sh",
     "dev": "dev=1 nodemon",
-    "start": "node build/index.js"
+    "start": "node index.js"
   },
   "keywords": [],
   "author": "",
@@ -19,6 +19,7 @@
   "devDependencies": {
     "@types/express": "^4.17.21",
     "@types/node": "^22.0.0",
+    "esbuild": "^0.24.0",
     "nodemon": "^3.1.4",
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",

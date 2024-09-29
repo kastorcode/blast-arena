@@ -106,7 +106,7 @@ export function PlayerFactory (props:PlayerProps) : Player {
     y: props.y,
     sprite: new Image()
   } as unknown as Player
-  player.sprite.src = `/sprites/chars/${props.sprite}.png`
+  player.sprite.src = `${process.env.PUBLIC_URL}/sprites/chars/${props.sprite}.png`
   player.setMyself = setMyself.bind(player)
   player.getAxes = getAxes.bind(player)
   player.addInputListener = addInputListener.bind(player)

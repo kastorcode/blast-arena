@@ -23,22 +23,13 @@ export default function Canvas ({style, setShowGame}:CanvasProps) {
 
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const endGameTimeout = useRef<NodeJS.Timeout>()
-  const fpsRef = useRef({fps:0, lastTime:0})
   const readyRef = useRef(0)
   const [context, setContext] = useState<CanvasRenderingContext2D>()
   const [myself, setMyself] = useState<number>()
   const [state, setState] = useState<GameState>()
 
-  function gameLoop (timestamp : number) {
+  function gameLoop () {
     try {
-      const deltaTime = timestamp - fpsRef.current.lastTime
-      fpsRef.current.lastTime = timestamp
-      let fps = 1000 / deltaTime
-      if (fps > 58 && fps < 62) fps = 60
-      if (fps !== fpsRef.current.fps) {
-        fpsRef.current.fps = fps
-        console.log(`${fps} FPS`)
-      }
       tick()
       render()
       requestAnimationFrame(gameLoop)
@@ -210,7 +201,7 @@ export default function Canvas ({style, setShowGame}:CanvasProps) {
   useEffect(() => {
     if (!context || typeof myself !== 'number' || !state) return
     Assets.set(state)
-    gameLoop(Date.now())
+    gameLoop()
     return () => {
       clearTimeout(endGameTimeout.current)
       stopWinSound()

@@ -33,7 +33,7 @@ export default function HomePage () {
 
   useEffect(() => {
     if (!containerRef.current || isInternetSlow()) return
-    containerRef.current!.style.backgroundImage = 'url(/images/bg/0.jpg)'
+    containerRef.current!.style.backgroundImage = `url(${process.env.PUBLIC_URL}/images/bg/0.jpg)`
   })
 
   return (

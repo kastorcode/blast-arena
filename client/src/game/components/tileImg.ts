@@ -1,3 +1,3 @@
 const image = new Image()
-image.src = '/sprites/stages/block.png'
+image.src = `${process.env.PUBLIC_URL}/sprites/stages/block.png`
 export default image

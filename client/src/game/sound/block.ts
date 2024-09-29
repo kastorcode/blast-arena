@@ -1,4 +1,4 @@
-const SOUND = new Audio('/sound/block/0.wav')
+const SOUND = new Audio(`${process.env.PUBLIC_URL}/sound/block/0.wav`)
 
 export function playBlockSound () {
   SOUND.currentTime = 0

@@ -2,29 +2,11 @@
   "name": "client",
   "version": "0.1.0",
   "private": true,
-  "dependencies": {
-    "@reduxjs/toolkit": "^2.2.7",
-    "@types/node": "^16.18.104",
-    "@types/react": "^17.0.80",
-    "@types/react-dom": "^17.0.25",
-    "axios": "^1.7.7",
-    "react": "^17.0.2",
-    "react-canvas-draw": "^1.2.1",
-    "react-dom": "^17.0.2",
-    "react-redux": "7",
-    "react-router-dom": "^6.26.1",
-    "react-scripts": "5.0.1",
-    "react-toastify": "9",
-    "redux": "^5.0.1",
-    "redux-thunk": "^3.1.0",
-    "socket.io-client": "^4.7.5",
-    "styled-components": "^6.1.12",
-    "typescript": "^5.5.4",
-    "web-vitals": "^2.1.4"
-  },
+  "homepage": "https://kastorcode.github.io/blast-arena",
   "scripts": {
-    "build": "craco build",
     "dev": "craco start",
+    "build": "craco build",
+    "deploy": "gh-pages -b client -d build",
     "test": "craco test",
     "eject": "craco eject"
   },
@@ -46,8 +28,29 @@
       "last 1 safari version"
     ]
   },
+  "dependencies": {
+    "@reduxjs/toolkit": "^2.2.7",
+    "@types/node": "^16.18.104",
+    "@types/react": "^17.0.80",
+    "@types/react-dom": "^17.0.25",
+    "axios": "^1.7.7",
+    "react": "^17.0.2",
+    "react-canvas-draw": "^1.2.1",
+    "react-dom": "^17.0.2",
+    "react-redux": "7",
+    "react-router-dom": "^6.26.1",
+    "react-scripts": "5.0.1",
+    "react-toastify": "9",
+    "redux": "^5.0.1",
+    "redux-thunk": "^3.1.0",
+    "socket.io-client": "^4.7.5",
+    "styled-components": "^6.1.12",
+    "typescript": "^5.5.4",
+    "web-vitals": "^2.1.4"
+  },
   "devDependencies": {
     "@craco/craco": "^7.1.0",
+    "gh-pages": "^6.1.1",
     "ts-loader": "^9.5.1"
   }
 }

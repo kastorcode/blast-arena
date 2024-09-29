@@ -1,6 +1,6 @@
 import { toast, ToastOptions } from 'react-toastify'
 import { ERRORS } from '#/errors'
-import { PAGES } from '~/constants'
+import { BASENAME } from '~/constants'
 
 const toastOptions:ToastOptions = {
   autoClose: 3000,
@@ -48,7 +48,7 @@ const handler:{[key:string]:Function|undefined} = {
 
 function redirectToHomePage () {
   setTimeout(() => {
-    window.location.href = PAGES.HOME
+    window.location.href = BASENAME
   }, toastOptions.autoClose as number)
 }
 

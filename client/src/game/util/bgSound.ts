@@ -34,5 +34,5 @@ const SOUNDS:{[key:number]:number[]} = {
 }
 
 export function getBgSound (name:number) {
-  return `/sound/stages/${SOUNDS[name].getRandom()}.mp3`
+  return `${process.env.PUBLIC_URL}/sound/stages/${SOUNDS[name].getRandom()}.mp3`
 }

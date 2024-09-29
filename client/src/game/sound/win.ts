@@ -1,4 +1,4 @@
-const SOUND = new Audio('/sound/win/0.mp3')
+const SOUND = new Audio(`${process.env.PUBLIC_URL}/sound/win/0.mp3`)
 
 export function playWinSound (callback:()=>void) {
   const onEnd = () => {

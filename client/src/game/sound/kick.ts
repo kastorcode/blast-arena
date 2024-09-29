@@ -1,4 +1,4 @@
-const SOUND = new Audio('/sound/kick/0.wav')
+const SOUND = new Audio(`${process.env.PUBLIC_URL}/sound/kick/0.wav`)
 
 export function playKickSound () {
   SOUND.currentTime = 0

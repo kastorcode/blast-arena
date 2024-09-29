@@ -1,4 +1,4 @@
-const SOUND = new Audio('/sound/bomb/0.wav')
+const SOUND = new Audio(`${process.env.PUBLIC_URL}/sound/bomb/0.wav`)
 
 export function playBombSound () {
   SOUND.currentTime = 0

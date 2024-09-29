@@ -1,6 +1,6 @@
 import { Bonus } from '~/game/entities/bonus'
 
-const PATH = '/sound/bonus/'
+const PATH = `${process.env.PUBLIC_URL}/sound/bonus/`
 
 const EXT = '.mp3'
 

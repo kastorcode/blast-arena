@@ -1,6 +1,6 @@
 import { Assets } from '~/game/util/assets'
 
-const SOUND = new Audio('/sound/timer/0.mp3')
+const SOUND = new Audio(`${process.env.PUBLIC_URL}/sound/timer/0.mp3`)
 
 export function playTimerSound (callback:()=>void) {
   const onEnd = () => {
