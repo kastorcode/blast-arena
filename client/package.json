@@ -1,12 +1,13 @@
 {
-  "name": "client",
-  "version": "0.1.0",
-  "private": true,
+  "name": "blast-arena-client",
+  "version": "1.0.0",
+  "description": "Frontend of Blast Arena game",
+  "author": "<kastor.code/> Matheus Ramalho de Oliveira",
   "homepage": "https://kastorcode.github.io/blast-arena",
   "scripts": {
     "dev": "craco start",
     "build": "craco build",
-    "deploy": "gh-pages -b client -d build",
+    "deploy": "./deploy.sh",
     "test": "craco test",
     "eject": "craco eject"
   },
@@ -50,7 +51,6 @@
   },
   "devDependencies": {
     "@craco/craco": "^7.1.0",
-    "gh-pages": "^6.1.1",
     "ts-loader": "^9.5.1"
   }
 }

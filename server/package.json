@@ -1,16 +1,15 @@
 {
-  "name": "server",
+  "name": "blast-arena-server",
   "version": "1.0.0",
-  "main": "index.js",
+  "description": "Backend of Blast Arena game",
+  "author": "<kastor.code/> Matheus Ramalho de Oliveira",
+  "main": "src/index.ts",
   "scripts": {
-    "build": "./build.sh",
     "dev": "dev=1 nodemon",
+    "build": "./build.sh",
+    "deploy": "./deploy.sh",
     "start": "node index.js"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "description": "",
   "dependencies": {
     "cors": "^2.8.5",
     "express": "^4.19.2",
