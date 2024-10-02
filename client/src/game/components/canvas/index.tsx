@@ -22,8 +22,8 @@ interface CanvasProps {
 export default function Canvas ({style, setShowGame}:CanvasProps) {
 
   const canvasRef = useRef<HTMLCanvasElement>(null)
-  const endGameTimeout = useRef<NodeJS.Timeout>()
   const readyRef = useRef(0)
+  const timeRef = useRef<{endGame:NodeJS.Timeout|undefined, gameLoop:NodeJS.Timer|undefined}>({endGame:undefined, gameLoop:undefined})
   const [context, setContext] = useState<CanvasRenderingContext2D>()
   const [myself, setMyself] = useState<number>()
   const [state, setState] = useState<GameState>()
@@ -32,7 +32,6 @@ export default function Canvas ({style, setShowGame}:CanvasProps) {
     try {
       tick()
       render()
-      requestAnimationFrame(gameLoop)
     }
     catch (error) {
       console.error(error)
@@ -149,13 +148,13 @@ export default function Canvas ({style, setShowGame}:CanvasProps) {
     for (const i in players) {
       if (players[i].active) {
         if (players[i].myself) {
-          endGameTimeout.current = setTimeout(() => {
+          timeRef.current.endGame = setTimeout(() => {
             toast.success('Victory Royale!', {icon:'👑',theme:'colored',autoClose:6000})
             playWinSound(() => setShowGame(false))
           }, timeout)
         }
         else {
-          endGameTimeout.current = setTimeout(() => setShowGame(false), timeout)
+          timeRef.current.endGame = setTimeout(() => setShowGame(false), timeout)
         }
         break
       }
@@ -201,9 +200,10 @@ export default function Canvas ({style, setShowGame}:CanvasProps) {
   useEffect(() => {
     if (!context || typeof myself !== 'number' || !state) return
     Assets.set(state)
-    gameLoop()
+    timeRef.current.gameLoop = setInterval(gameLoop, 1000 / 60)
     return () => {
-      clearTimeout(endGameTimeout.current)
+      clearInterval(timeRef.current.gameLoop)
+      clearTimeout(timeRef.current.endGame)
       stopWinSound()
       Assets.stop()
     }

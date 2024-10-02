@@ -35,12 +35,13 @@ function GameSection () {
   return (
     <GameContainer>
       <h1>Blast Arena</h1>
-      <p>Blast Arena is a browser based, battle royale and online multiplayer game. With old school 2D graphics and a nostalgic soundtrack, 4 players compete for victory using bombs on a board. Invite your friends to epic battles and use power ups to enhance your skills, who will have the best strategy?</p>
+      <p>Blast Arena is a browser based, battle royale and online multiplayer game. With old school 2D graphics and a nostalgic soundtrack, 4 players compete for victory using bombs on a board. The game has more than 27 characters and scenarios, has power ups and support for controller, keyboard and touch screen. You can play with your friends and also pair up with anyone in the world, it has a lobby system, nickname, call and full-screen. Invite your friends to epic battles and use power ups to enhance your skills, who will have the best strategy?</p>
       <div>
         <Gamepad />
         <Smartphone />
         <Computer />
       </div>
+      <img src={`${process.env.PUBLIC_URL}/images/screenshots/0.png`} />
     </GameContainer>
   )
 }

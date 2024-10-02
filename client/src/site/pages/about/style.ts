@@ -63,8 +63,12 @@ export const GameContainer = styled.div`
     flex-direction: row;
     justify-content: center;
     margin: auto;
+    margin-bottom: 1rem;
     max-width: 288px;
     width: 100%;
+  }
+  img {
+    max-width: 100%;
   }
   svg {
     fill: #fff;

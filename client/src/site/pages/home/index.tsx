@@ -1,13 +1,13 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useSelector } from 'react-redux'
 import { Outlet, useOutlet } from 'react-router-dom'
 import { LobbyDTO } from '#/dto'
 import GameApp from '~/game/components/gameApp'
+import { socket } from '~/services/socket'
 import Lobby from '~/site/components/lobby'
 import Menu from '~/site/components/menu'
 import Options from '~/site/components/options'
 import SiteApp from '~/site/components/siteApp'
-import { isInternetSlow } from '~/site/util/net'
 import { Container } from './style'
 
 export default function HomePage () {
@@ -16,7 +16,11 @@ export default function HomePage () {
   const outlet = useOutlet()
   const [showGame, setShowGame] = useState(false)
   const [showOptions, setShowOptions] = useState(false)
-  const containerRef = useRef<HTMLDivElement>(null)
+
+  function handleOpenGame () {
+    socket.off('open_game', handleOpenGame)
+    setShowGame(true)
+  }
 
   function GetPage () {
     if (outlet) return (
@@ -26,14 +30,16 @@ export default function HomePage () {
       <Options setShowOptions={setShowOptions} />
     )
     if (lobby) return (
-      <Lobby lobby={lobby} setShowGame={setShowGame} setShowOptions={setShowOptions} />
+      <Lobby lobby={lobby} setShowOptions={setShowOptions} />
     )
     return null
   }
 
   useEffect(() => {
-    if (!containerRef.current || isInternetSlow()) return
-    containerRef.current!.style.backgroundImage = `url(${process.env.PUBLIC_URL}/images/bg/0.jpg)`
+    socket.on('open_game', handleOpenGame)
+    return () => {
+      socket.off('open_game', handleOpenGame)
+    }
   })
 
   return (
@@ -41,7 +47,7 @@ export default function HomePage () {
       { showGame ? (
         <GameApp setShowGame={setShowGame} />
       ) : (
-        <Container ref={containerRef}>
+        <Container>
           {!showOptions && <Menu/>}
           <GetPage/>
         </Container>

@@ -1,8 +1,6 @@
-import { useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { LobbyDTO } from '#/dto'
 import { copyToClipboard } from '~/services/clipboard'
-import { socket } from '~/services/socket'
 import OnlinePlayers from '~/site/components/onlinePlayers'
 import Toggle from '~/site/components/toggle'
 import { setFillRoom } from '~/store/options/actions'
@@ -12,26 +10,13 @@ import { Container, LobbyContainer, LobbyId, Options, OptionsContainer, Play, Pl
 
 interface LobbyProps {
   lobby          : LobbyDTO
-  setShowGame    : React.Dispatch<React.SetStateAction<boolean>>
   setShowOptions : React.Dispatch<React.SetStateAction<boolean>>
 }
 
-export default function Lobby ({ lobby, setShowGame, setShowOptions } : LobbyProps) {
+export default function Lobby ({ lobby, setShowOptions } : LobbyProps) {
 
   const dispatch = useDispatch()
   const options = useSelector<any,OptionsDTO>(state => state.options)
-
-  function handleOpenGame () {
-    socket.off('open_game', handleOpenGame)
-    setShowGame(true)
-  }
-
-  useEffect(() => {
-    socket.on('open_game', handleOpenGame)
-    return () => {
-      socket.off('open_game', handleOpenGame)
-    }
-  }, [])
 
   return (
     <Container>
