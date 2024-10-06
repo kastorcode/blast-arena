@@ -1,0 +1,28 @@
+{
+  "name": "blast-arena-server",
+  "version": "1.0.0",
+  "description": "Backend of Blast Arena game",
+  "author": "<kastor.code/> Matheus Ramalho de Oliveira",
+  "main": "src/index.ts",
+  "scripts": {
+    "dev": "cross-env dev=1 nodemon",
+    "build": "./build.sh",
+    "deploy": "./deploy.sh",
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.19.2",
+    "socket.io": "^4.7.5"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/node": "^22.0.0",
+    "cross-env": "^7.0.3",
+    "esbuild": "^0.24.0",
+    "nodemon": "^3.1.4",
+    "ts-node": "^10.9.2",
+    "tsconfig-paths": "^4.2.0",
+    "typescript": "^5.5.4"
+  }
+}
