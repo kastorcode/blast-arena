@@ -14,12 +14,18 @@ export default function HomePage () {
 
   const lobby = useSelector<any,LobbyDTO|null>(state => state.lobby)
   const outlet = useOutlet()
+  const [myself, setMyself] = useState<number|null>(null)
   const [showGame, setShowGame] = useState(false)
   const [showOptions, setShowOptions] = useState(false)
 
   function handleOpenGame () {
     socket.off('open_game', handleOpenGame)
     setShowGame(true)
+  }
+
+  function handleMyself (index:number) {
+    socket.off('myself', handleMyself)
+    setMyself(index)
   }
 
   function GetPage () {
@@ -36,16 +42,24 @@ export default function HomePage () {
   }
 
   useEffect(() => {
+    if (!showGame) {
+      setMyself(null)
+    }
+  }, [showGame])
+
+  useEffect(() => {
     socket.on('open_game', handleOpenGame)
+    socket.on('myself', handleMyself)
     return () => {
       socket.off('open_game', handleOpenGame)
+      socket.off('myself', handleMyself)
     }
   })
 
   return (
     <SiteApp>
       { showGame ? (
-        <GameApp setShowGame={setShowGame} />
+        <GameApp myself={myself} setShowGame={setShowGame} />
       ) : (
         <Container>
           {!showOptions && <Menu/>}

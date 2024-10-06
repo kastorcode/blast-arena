@@ -10,10 +10,11 @@ import { Back } from './assets'
 import { ButtonsContainer, Container } from './style'
 
 interface GameAppProps {
+  myself : number|null
   setShowGame : React.Dispatch<React.SetStateAction<boolean>>
 }
 
-export default function GameApp ({setShowGame}:GameAppProps) {
+export default function GameApp ({myself, setShowGame}:GameAppProps) {
 
   const isPortrait = useIsPortrait()
   const options = useSelector<any,OptionsDTO>(state => state.options)
@@ -63,7 +64,7 @@ export default function GameApp ({setShowGame}:GameAppProps) {
       <ButtonsContainer>
         <Back onClick={() => setShowGame(false)}/>
       </ButtonsContainer>
-      <Canvas style={getCanvasStyle()} setShowGame={setShowGame} />
+      <Canvas myself={myself} style={getCanvasStyle()} setShowGame={setShowGame} />
     </Container>
   )
 

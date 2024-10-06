@@ -15,17 +15,17 @@ import { socket } from '~/services/socket'
 import { Pairing, Players, Timer } from './style'
 
 interface CanvasProps {
-  style : React.CSSProperties
+  myself : number|null
+  style  : React.CSSProperties
   setShowGame : React.Dispatch<React.SetStateAction<boolean>>
 }
 
-export default function Canvas ({style, setShowGame}:CanvasProps) {
+export default function Canvas ({myself, style, setShowGame}:CanvasProps) {
 
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const readyRef = useRef(0)
   const timeRef = useRef<{endGame:NodeJS.Timeout|undefined, gameLoop:NodeJS.Timer|undefined}>({endGame:undefined, gameLoop:undefined})
   const [context, setContext] = useState<CanvasRenderingContext2D>()
-  const [myself, setMyself] = useState<number>()
   const [state, setState] = useState<GameState>()
 
   function gameLoop () {
@@ -162,7 +162,6 @@ export default function Canvas ({style, setShowGame}:CanvasProps) {
   }
 
   useEffect(() => {
-    socket.on('myself', setMyself)
     socket.on('start_game', startGame)
     socket.on('ready', onReady)
     socket.on('mv', onMove)
@@ -173,7 +172,6 @@ export default function Canvas ({style, setShowGame}:CanvasProps) {
     socket.on('nb', onNullifyBlock)
     socket.on('kl', onKill)
     return () => {
-      socket.off('myself', setMyself)
       socket.off('start_game', startGame)
       socket.off('ready', onReady)
       socket.off('mv', onMove)
@@ -188,7 +186,6 @@ export default function Canvas ({style, setShowGame}:CanvasProps) {
 
   useEffect(() => {
     if (typeof myself !== 'number' || !state) return
-    socket.off('myself', setMyself)
     socket.off('start_game', startGame)
     state.players.setMyself(myself)
     state.players.myself?.addInputListener(state)
