@@ -21,7 +21,7 @@ export const BONUSES = [
   2   // kill
 ]
 
-export const ID_LENGTH = 12
+export const ID_LENGTH = 4
 
 export const INITIAL_POSITION = [[17,9], [209,9], [17,169], [209,169]]
 
