@@ -1,0 +1,13 @@
+{
+  "files": {
+    "main.css": "/blast-arena/static/css/main.c43d5ba0.css",
+    "main.js": "/blast-arena/static/js/main.2f66ced5.js",
+    "index.html": "/blast-arena/index.html",
+    "main.c43d5ba0.css.map": "/blast-arena/static/css/main.c43d5ba0.css.map",
+    "main.2f66ced5.js.map": "/blast-arena/static/js/main.2f66ced5.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.c43d5ba0.css",
+    "static/js/main.2f66ced5.js"
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "name": "Blast Arena",
+  "icons": [
+    {
+      "src": "favicon.svg",
+      "sizes": "576x576",
+      "type": "image/svg+xml"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#0000ff",
+  "background_color": "#000"
+}
